@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ACİL ASİSTAN | DİNAMİK SİSTEM</title>
+    <title>ACİL ASİSTAN | FIX</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .active-tab { color: #ef4444; border-top: 4px solid #ef4444; }
-        body { background-color: #f8fafc; font-family: sans-serif; overflow-x: hidden; }
+        body { background-color: #f8fafc; font-family: sans-serif; }
         .btn-action { transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .btn-action:active { transform: scale(0.95); }
     </style>
 </head>
 <body class="pb-24">
@@ -25,7 +24,7 @@
         <section id="modul-doz" class="space-y-4">
             <div class="bg-white rounded-[2rem] p-6 border shadow-sm">
                 <input type="number" id="kiloInput" placeholder="Kilo (kg)" class="w-full bg-gray-50 rounded-2xl p-5 text-3xl font-black mb-4 outline-none border-2 border-transparent focus:border-red-200">
-                <select id="ilacSelect" class="w-full bg-gray-50 rounded-2xl p-4 text-lg font-bold mb-4 outline-none border-2 border-transparent"></select>
+                <select id="ilacSelect" class="w-full bg-gray-50 rounded-2xl p-4 text-lg font-bold mb-4 outline-none"></select>
                 <button onclick="hesapla()" class="w-full bg-red-600 text-white font-bold py-5 rounded-2xl text-xl shadow-lg">HESAPLA</button>
                 <div id="sonucPanel" class="hidden mt-4 bg-gray-900 rounded-3xl p-6 text-center text-white">
                     <h3 id="sonucDeger" class="text-5xl font-black mb-1">--</h3>
@@ -36,9 +35,8 @@
 
         <section id="modul-algo" class="hidden space-y-4">
             <div id="algo-screen" class="bg-white rounded-[2rem] p-6 border shadow-sm min-h-[450px] flex flex-col">
-                <div id="algo-header" class="mb-4"></div>
                 <div id="algo-body" class="flex-grow flex flex-col justify-center text-center space-y-4">
-                    <p class="text-gray-400 font-bold">Algoritmalar Yükleniyor...</p>
+                    <p class="text-gray-400 font-bold">Veriler Yükleniyor...</p>
                 </div>
             </div>
         </section>
@@ -62,40 +60,68 @@
         let db_algos = {};
         let patientKilo = null;
 
-        async function init() {
-            // İlaçları yükle
-            const resI = await fetch(URL_ILAC);
-            const csvI = await resI.text();
-            csvI.split('\n').slice(1).forEach(r => {
-                const c = r.split(',');
-                if(c[0]) db_drugs.push({ad: c[0], doz: parseFloat(c[1]), birim: c[2]||'mg'});
-            });
-            const sel = document.getElementById('ilacSelect');
-            db_drugs.forEach((d, i) => sel.innerHTML += `<option value="${i}">${d.ad}</option>`);
+        // Akıllı CSV Parçalayıcı (Virgül sorununu çözer)
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let char of line) {
+                if (char === '"') inQuotes = !inQuotes;
+                else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else current += char;
+            }
+            result.push(current.trim());
+            return result;
+        }
 
-            // Algoritmaları yükle
-            const resA = await fetch(URL_ALGO);
-            const csvA = await resA.text();
-            csvA.split('\n').slice(1).forEach(r => {
-                const c = r.split(',');
-                if(c[0]) db_algos[c[0].trim()] = { soru: c[1], e_metin: c[2], e_hedef: c[3].trim(), h_metin: c[4], h_hedef: c[5].trim(), ses: c[6] };
-            });
-            renderMenu();
+        async function init() {
+            // İlaçlar
+            try {
+                const resI = await fetch(URL_ILAC);
+                const textI = await resI.text();
+                textI.split('\n').slice(1).forEach(line => {
+                    const cols = parseCSVLine(line);
+                    if(cols[0]) db_drugs.push({ad: cols[0], doz: parseFloat(cols[1]), birim: cols[2]});
+                });
+                const sel = document.getElementById('ilacSelect');
+                db_drugs.forEach((d, i) => sel.innerHTML += `<option value="${i}">${d.ad}</option>`);
+            } catch(e) { console.error("İlaç yükleme hatası"); }
+
+            // Algoritmalar
+            try {
+                const resA = await fetch(URL_ALGO);
+                const textA = await resA.text();
+                textA.split('\n').slice(1).forEach(line => {
+                    const c = parseCSVLine(line);
+                    if(c[0]) {
+                        db_algos[c[0]] = {
+                            soru: c[1],
+                            e_metin: c[2],
+                            e_hedef: c[3],
+                            h_metin: c[4],
+                            h_hedef: c[5],
+                            ses: c[6]
+                        };
+                    }
+                });
+                renderMenu();
+            } catch(e) { console.error("Algo yükleme hatası"); }
         }
 
         function renderMenu() {
             const body = document.getElementById('algo-body');
             body.innerHTML = '<h3 class="font-black text-xl text-gray-800 mb-4">Protokol Seçin</h3>';
-            // 'start' ile başlayan veya menüde olması gerekenleri listele
             Object.keys(db_algos).forEach(id => {
-                if(id.includes('_basla')) {
-                    body.innerHTML += `<button onclick="startAlgo('${id}')" class="w-full p-5 bg-blue-600 text-white rounded-3xl font-black btn-action uppercase">${id.replace('_basla','').replace('_',' ')}</button>`;
+                if(id.endsWith('_basla')) {
+                    body.innerHTML += `<button onclick="startAlgo('${id}')" class="w-full p-5 bg-blue-600 text-white rounded-3xl font-black btn-action uppercase mb-2">${id.replace('_basla','').replace('_',' ')}</button>`;
                 }
             });
         }
 
         function startAlgo(id) {
-            const k = prompt("Hasta Kilosu? (Boş bırakılabilir)");
+            const k = prompt("Hasta Kilosu (kg)?");
             patientKilo = k ? parseFloat(k) : null;
             if(patientKilo) {
                 document.getElementById('weight-tag').innerText = patientKilo + " kg";
@@ -105,25 +131,25 @@
         }
 
         function showStep(id) {
-            if(!db_algos[id]) { location.reload(); return; }
             const step = db_algos[id];
-            const body = document.getElementById('algo-body');
+            if(!step) { renderMenu(); return; }
             
-            // Doz hesaplama mantığı (Soru içinde {0.01} gibi ifadeler varsa)
-            let soruText = step.soru;
+            const body = document.getElementById('algo-body');
+            let text = step.soru;
+            // Dinamik Doz Hesaplama: {0.01} gibi değerleri kilo ile çarpar
             if(patientKilo) {
-                soruText = soruText.replace(/{(\d+\.?\合理*)}/g, (match, p1) => (parseFloat(p1) * patientKilo).toFixed(2));
+                text = text.replace(/{([\d.]+)}/g, (m, p1) => (parseFloat(p1) * patientKilo).toFixed(2));
             }
 
             body.innerHTML = `
-                <div class="p-6 bg-gray-50 rounded-[2rem] mb-4 border border-gray-100">
-                    <p class="text-xl font-bold text-gray-800 leading-tight">${soruText}</p>
+                <div class="p-6 bg-gray-50 rounded-[2rem] mb-6 border border-gray-100">
+                    <p class="text-xl font-bold text-gray-800 leading-snug">${text}</p>
                 </div>
-                <div class="grid grid-cols-1 gap-3">
-                    ${step.e_metin ? `<button onclick="showStep('${step.e_hedef}')" class="p-5 bg-red-600 text-white rounded-2xl font-black btn-action">${step.e_metin}</button>` : ''}
-                    ${step.h_metin ? `<button onclick="showStep('${step.h_hedef}')" class="p-5 bg-gray-800 text-white rounded-2xl font-black btn-action">${step.h_metin}</button>` : ''}
+                <div class="space-y-3">
+                    ${step.e_metin ? `<button onclick="showStep('${step.e_hedef}')" class="w-full p-5 bg-red-600 text-white rounded-2xl font-black btn-action uppercase">${step.e_metin}</button>` : ''}
+                    ${step.h_metin ? `<button onclick="showStep('${step.h_hedef}')" class="w-full p-5 bg-gray-800 text-white rounded-2xl font-black btn-action uppercase">${step.h_metin}</button>` : ''}
                 </div>
-                <button onclick="renderMenu()" class="text-xs font-bold text-gray-400 mt-4 uppercase tracking-widest">Vakayı Sonlandır</button>
+                <button onclick="location.reload()" class="mt-8 text-gray-400 font-bold text-xs uppercase underline">Vakayı Kapat</button>
             `;
             if(step.ses) speak(step.ses);
         }
@@ -133,7 +159,7 @@
             const i = db_drugs[document.getElementById('ilacSelect').value];
             if(!k) return alert("Kilo girin!");
             const res = (k * i.doz).toFixed(2);
-            document.getElementById('sonucDeger').innerText = res + " " + i.birim;
+            document.getElementById('sonucDeger').innerText = res + " " + (i.birim || 'mg');
             document.getElementById('sonucMetin').innerText = i.ad;
             document.getElementById('sonucPanel').classList.remove('hidden');
             speak(res + " " + i.birim + " " + i.ad);
