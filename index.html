@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ACİL ASİSTAN | MARDİN 112</title>
+    <title>ACİL ASİSTAN | SMART PROTOCOL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         .active-tab { color: #ef4444; border-top: 4px solid #ef4444; }
-        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
         .btn-action { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        .btn-action:active { transform: scale(0.96); }
-        .algo-card { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-action:active { transform: scale(0.95); }
+        .algo-card { animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .pulse-border { animation: pulseBorder 2s infinite; }
+        @keyframes pulseBorder { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
     </style>
 </head>
 <body class="pb-24">
@@ -24,27 +25,27 @@
             <h1 class="font-black text-2xl tracking-tighter text-gray-900 leading-none">ACİL<span class="text-red-600">ASİSTAN</span></h1>
             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Mardin 112 Karar Destek</p>
         </div>
-        <div id="weight-tag" class="hidden bg-blue-100 text-blue-700 px-3 py-1.5 rounded-2xl text-xs font-black ring-1 ring-blue-200"></div>
+        <div id="weight-tag" class="hidden bg-red-50 text-red-600 px-3 py-1.5 rounded-xl text-xs font-black border border-red-100"></div>
     </header>
 
     <main class="max-w-lg mx-auto p-4 space-y-4">
         
         <section id="modul-doz" class="space-y-4">
-            <div class="bg-white rounded-[2.5rem] p-6 border shadow-sm border-gray-100">
+            <div class="bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm">
                 <div class="mb-6">
-                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Hasta Kilosu</label>
-                    <input type="number" id="kiloInput" placeholder="0" class="w-full bg-gray-50 rounded-2xl p-5 text-4xl font-black mt-1 outline-none border-2 border-transparent focus:border-red-100 transition-all">
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Hasta Kilosu (kg)</label>
+                    <input type="number" id="kiloInput" placeholder="0" class="w-full bg-gray-50 rounded-3xl p-6 text-4xl font-black mt-2 outline-none border-2 border-transparent focus:border-red-100 transition-all">
                 </div>
                 
                 <div class="mb-6">
-                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">İlaç Seçimi</label>
-                    <select id="ilacSelect" class="w-full bg-gray-50 rounded-2xl p-5 text-lg font-bold mt-1 outline-none border-2 border-transparent appearance-none"></select>
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">İlaç Seçimi</label>
+                    <select id="ilacSelect" class="w-full bg-gray-50 rounded-2xl p-5 text-lg font-bold mt-2 outline-none border-2 border-transparent appearance-none"></select>
                 </div>
 
-                <button onclick="hesapla()" class="w-full bg-red-600 text-white font-black py-5 rounded-[1.5rem] text-xl shadow-lg shadow-red-200 btn-action uppercase tracking-tight">Doz Hesapla</button>
+                <button onclick="hesapla()" class="w-full bg-red-600 text-white font-black py-5 rounded-3xl text-xl shadow-lg shadow-red-100 btn-action uppercase">Doz Hesapla</button>
                 
-                <div id="sonucPanel" class="hidden mt-6 bg-gray-900 rounded-[2rem] p-8 text-center text-white algo-card">
-                    <p class="text-[10px] font-bold opacity-50 uppercase tracking-[0.2em] mb-2">Uygulanacak Miktar</p>
+                <div id="sonucPanel" class="hidden mt-6 bg-gray-900 rounded-[2.5rem] p-8 text-center text-white algo-card">
+                    <p class="text-[10px] font-bold opacity-50 uppercase tracking-widest mb-2">Uygulanacak Miktar</p>
                     <h3 id="sonucDeger" class="text-5xl font-black mb-2 tracking-tighter">--</h3>
                     <p id="sonucMetin" class="text-sm font-bold text-red-400"></p>
                 </div>
@@ -52,31 +53,28 @@
         </section>
 
         <section id="modul-algo" class="hidden space-y-4">
-            <div id="algo-screen" class="bg-white rounded-[2.5rem] p-6 border shadow-sm border-gray-100 min-h-[500px] flex flex-col">
-                <div id="algo-body" class="flex-grow flex flex-col justify-center text-center space-y-4">
-                    <div class="animate-pulse flex flex-col items-center">
-                        <div class="h-12 w-12 bg-gray-100 rounded-full mb-4"></div>
-                        <p class="text-gray-300 font-bold uppercase text-xs tracking-widest">Veriler Senkronize Ediliyor...</p>
+            <div id="algo-screen" class="bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm min-h-[500px] flex flex-col">
+                <div id="algo-body" class="flex-grow flex flex-col justify-center text-center space-y-6">
                     </div>
-                </div>
             </div>
         </section>
 
     </main>
 
-    <nav class="fixed bottom-0 left-0 right-0 glass border-t border-gray-100 flex justify-around p-3 z-50">
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around p-3 z-50">
         <button onclick="tabDegistir('doz')" id="nav-doz" class="flex flex-col items-center gap-1 p-2 active-tab transition-all">
-            <i class="fa-solid fa-square-h text-2xl"></i><span class="text-[10px] font-black uppercase tracking-tighter">Doz</span>
+            <i class="fa-solid fa-calculator text-2xl"></i><span class="text-[10px] font-black uppercase tracking-tighter">Doz</span>
         </button>
         <button onclick="tabDegistir('algo')" id="nav-algo" class="flex flex-col items-center gap-1 p-2 text-gray-300 transition-all">
-            <i class="fa-solid fa-diagram-nested text-2xl"></i><span class="text-[10px] font-black uppercase tracking-tighter">Protokol</span>
+            <i class="fa-solid fa-route text-2xl"></i><span class="text-[10px] font-black uppercase tracking-tighter">Protokol</span>
         </button>
-        <div class="w-16"></div> <button onclick="location.reload()" class="flex flex-col items-center gap-1 p-2 text-gray-300">
-            <i class="fa-solid fa-rotate text-2xl"></i><span class="text-[10px] font-black uppercase tracking-tighter">Yenile</span>
+        <div class="w-16"></div>
+        <button onclick="location.reload()" class="flex flex-col items-center gap-1 p-2 text-gray-300">
+            <i class="fa-solid fa-house text-2xl"></i><span class="text-[10px] font-black uppercase tracking-tighter">Anasayfa</span>
         </button>
     </nav>
 
-    <button onclick="sesliAnlat()" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-red-600 text-white h-16 w-16 rounded-full shadow-2xl shadow-red-300 flex items-center justify-center border-4 border-white z-[60] active:scale-90 transition-all">
+    <button onclick="tekrarDinle()" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-red-600 text-white h-16 w-16 rounded-full shadow-2xl flex items-center justify-center border-4 border-white z-[60] active:scale-90 transition-all">
         <i class="fa-solid fa-volume-high text-2xl"></i>
     </button>
 
@@ -87,9 +85,8 @@
         let db_drugs = [];
         let db_algos = {};
         let patientWeight = null;
-        let lastVoiceText = "";
+        let currentVoiceText = "";
 
-        // Akıllı CSV Parçalayıcı (Hücre içindeki virgülleri korur)
         function parseCSV(line) {
             const result = [];
             let cur = '', inQuotes = false;
@@ -102,26 +99,21 @@
             return result;
         }
 
-        // SES MOTORU (Kaliteli Ses Seçici)
         function speak(text) {
             if(!text) return;
             window.speechSynthesis.cancel();
-            lastVoiceText = text;
+            currentVoiceText = text;
             const m = new SpeechSynthesisUtterance(text);
             m.lang = 'tr-TR';
             m.rate = 1.0;
-            
             const voices = window.speechSynthesis.getVoices();
-            // Google veya Microsoft'un doğal Türkçe seslerini bulmaya çalışır
-            const bestVoice = voices.find(v => v.lang.includes('tr') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Microsoft')));
-            if(bestVoice) m.voice = bestVoice;
-            
+            const naturalVoice = voices.find(v => v.lang.includes('tr') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Microsoft')));
+            if(naturalVoice) m.voice = naturalVoice;
             window.speechSynthesis.speak(m);
         }
 
         async function init() {
             try {
-                // İlaçlar
                 const resI = await fetch(URL_ILAC);
                 const textI = await resI.text();
                 textI.split('\n').slice(1).forEach(l => {
@@ -131,7 +123,6 @@
                 const sel = document.getElementById('ilacSelect');
                 db_drugs.forEach((d, i) => sel.innerHTML += `<option value="${i}">${d.ad}</option>`);
 
-                // Algoritmalar
                 const resA = await fetch(URL_ALGO);
                 const textA = await resA.text();
                 textA.split('\n').slice(1).forEach(l => {
@@ -139,27 +130,27 @@
                     if(c[0]) db_algos[c[0]] = { soru: c[1], e_metin: c[2], e_hedef: c[3], h_metin: c[4], h_hedef: c[5], ses: c[6] };
                 });
                 renderMenu();
-            } catch(e) { console.error("Veri hatası:", e); }
+            } catch(e) { console.error(e); }
         }
 
         function renderMenu() {
             const body = document.getElementById('algo-body');
-            body.innerHTML = '<h3 class="font-black text-2xl text-gray-800 mb-6 tracking-tight">Klinik Protokoller</h3>';
+            body.innerHTML = '<h3 class="font-black text-2xl text-gray-800 mb-6 tracking-tight">Acil Protokoller</h3>';
             Object.keys(db_algos).forEach(id => {
                 if(id.endsWith('_basla')) {
-                    body.innerHTML += `<button onclick="startAlgo('${id}')" class="w-full p-6 bg-blue-600 text-white rounded-3xl font-black btn-action uppercase shadow-lg shadow-blue-100 mb-3 text-left flex justify-between items-center">
+                    body.innerHTML += `<button onclick="startAlgo('${id}')" class="w-full p-6 bg-blue-600 text-white rounded-3xl font-black btn-action uppercase shadow-lg shadow-blue-100 mb-3 text-left flex justify-between items-center text-lg">
                         ${id.replace('_basla','').replace('_',' ')}
-                        <i class="fa-solid fa-chevron-right opacity-50"></i>
+                        <i class="fa-solid fa-chevron-right opacity-40"></i>
                     </button>`;
                 }
             });
         }
 
         function startAlgo(id) {
-            const k = prompt("Hesaplamalar için hasta kilosunu girin:");
+            const k = prompt("Hesaplamalar için hasta kilosunu girin (kg):");
             patientWeight = k ? parseFloat(k) : null;
             if(patientWeight) {
-                document.getElementById('weight-tag').innerText = patientKilo = patientWeight + " kg";
+                document.getElementById('weight-tag').innerText = patientWeight + " kg";
                 document.getElementById('weight-tag').classList.remove('hidden');
             }
             showStep(id);
@@ -170,30 +161,52 @@
             if(!step) { renderMenu(); return; }
             const body = document.getElementById('algo-body');
             
-            // Dozları soru içine yerleştir: {0.01} formülü
             let text = step.soru;
+            let bgColor = "bg-gray-50";
+            let textColor = "text-gray-800";
+            let icon = "";
+
+            // GÖRSEL TEMA BELİRLEME
+            if(text.includes("[UYARI]")) {
+                bgColor = "bg-amber-50"; textColor = "text-amber-900";
+                icon = '<i class="fa-solid fa-circle-exclamation text-amber-500 text-4xl mb-4 block"></i>';
+                text = text.replace("[UYARI]", "");
+            } else if(text.includes("[ONAY]")) {
+                bgColor = "bg-emerald-50"; textColor = "text-emerald-900";
+                icon = '<i class="fa-solid fa-phone-volume text-emerald-500 text-4xl mb-4 block animate-bounce"></i>';
+                text = text.replace("[ONAY]", "");
+            } else if(text.includes("[KRİTİK]")) {
+                bgColor = "bg-red-600"; textColor = "text-white";
+                icon = '<i class="fa-solid fa-biohazard text-white text-4xl mb-4 block"></i>';
+                text = text.replace("[KRİTİK]", "");
+            } else if(text.includes("[BİLGİ]")) {
+                icon = '<i class="fa-solid fa-circle-info text-blue-500 text-4xl mb-4 block"></i>';
+                text = text.replace("[BİLGİ]", "");
+            }
+
+            // FORMÜL HESAPLAMA {0.01}
             if(patientWeight) {
-                text = text.replace(/{([\d.]+)}/g, (m, p1) => `<span class="text-red-600 font-black underline">${(parseFloat(p1) * patientWeight).toFixed(2)}</span>`);
+                text = text.replace(/{([\d.]+)}/g, (m, p1) => `<span class="bg-white/20 px-2 py-1 rounded font-black border-b-4 border-current">${(parseFloat(p1) * patientWeight).toFixed(2)}</span>`);
             } else {
-                text = text.replace(/{([\d.]+)}/g, (m, p1) => `<span class="text-blue-600">${p1} mg/kg</span>`);
+                text = text.replace(/{([\d.]+)}/g, (m, p1) => `<span class="opacity-50 underline">${p1} mg/kg</span>`);
             }
 
             body.innerHTML = `
                 <div class="algo-card">
-                    <div class="p-8 bg-gray-50 rounded-[2.5rem] mb-8 border border-gray-100 ring-4 ring-gray-50">
-                        <p class="text-2xl font-bold text-gray-800 leading-tight">${text}</p>
+                    <div class="p-8 ${bgColor} rounded-[2.5rem] mb-6 border border-black/5 shadow-inner">
+                        ${icon}
+                        <p class="text-2xl font-bold ${textColor} leading-tight">${text}</p>
                     </div>
                     <div class="space-y-4">
-                        ${step.e_metin ? `<button onclick="showStep('${step.e_hedef}')" class="w-full p-6 bg-red-600 text-white rounded-2xl font-black btn-action uppercase shadow-xl shadow-red-100 text-lg">${step.e_metin}</button>` : ''}
-                        ${step.h_metin ? `<button onclick="showStep('${step.h_hedef}')" class="w-full p-6 bg-gray-900 text-white rounded-2xl font-black btn-action uppercase text-lg">${step.h_metin}</button>` : ''}
+                        ${step.e_metin ? `<button onclick="showStep('${step.e_hedef}')" class="w-full p-6 bg-red-600 text-white rounded-3xl font-black btn-action uppercase text-lg shadow-xl shadow-red-200">${step.e_metin}</button>` : ''}
+                        ${step.h_metin ? `<button onclick="showStep('${step.h_hedef}')" class="w-full p-6 bg-gray-900 text-white rounded-3xl font-black btn-action uppercase text-lg">${step.h_metin}</button>` : ''}
                     </div>
-                    <button onclick="location.reload()" class="mt-12 text-gray-400 font-black text-[10px] uppercase tracking-[0.3em]">Vakayı Kapat</button>
+                    <button onclick="location.reload()" class="mt-10 text-gray-400 font-black text-[10px] uppercase tracking-[0.4em]">Vakayı Sonlandır</button>
                 </div>
             `;
             
-            // Sesli okuma (Ekranda görünen metni temizleyip okur)
-            let speechText = step.ses || step.soru.replace(/{([\d.]+)}/g, (m, p1) => patientWeight ? (parseFloat(p1) * patientWeight).toFixed(2) : p1);
-            speak(speechText);
+            let speechContent = step.ses || text.replace(/<[^>]*>?/gm, '');
+            speak(speechContent);
         }
 
         function hesapla() {
@@ -201,8 +214,8 @@
             const i = db_drugs[document.getElementById('ilacSelect').value];
             if(!k) { speak("Lütfen önce kilo giriniz"); return; }
             const res = (k * i.doz).toFixed(2);
-            document.getElementById('sonucDeger').innerText = res + " " + i.birim;
-            document.getElementById('sonucMetin').innerText = i.ad + " (" + i.doz + " " + i.birim + "/kg)";
+            document.getElementById('sonucDeger').innerText = res + " " + (i.birim || 'mg');
+            document.getElementById('sonucMetin').innerText = i.ad;
             document.getElementById('sonucPanel').classList.remove('hidden');
             speak("Uygulanacak doz " + res + " " + i.birim + " " + i.ad);
         }
@@ -214,12 +227,11 @@
             document.getElementById('nav-algo').classList.toggle('active-tab', h === 'algo');
         }
 
-        function sesliAnlat() { speak(lastVoiceText || "Sistem hazır, dinliyorum."); }
+        function tekrarDinle() { speak(currentVoiceText || "Sistem hazır."); }
 
         window.onload = () => {
             init();
-            // Seslerin yüklenmesi için kısa bir gecikme
-            setTimeout(() => window.speechSynthesis.getVoices(), 1000);
+            setTimeout(() => window.speechSynthesis.getVoices(), 500);
         };
     </script>
 </body>
