@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACİL ASİSTAN | Prototip</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .active-tab { border-bottom: 4px solid #ef4444; color: #ef4444; }
+        body { background-color: #f3f4f6; -webkit-tap-highlight-color: transparent; }
+    </style>
+</head>
+<body class="font-sans">
+
+    <header class="bg-red-600 text-white p-4 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <i class="fa-solid fa-stretcher"></i> ACİL ASİSTAN
+            </h1>
+            <span class="text-xs bg-red-800 px-2 py-1 rounded">MARDİN 112</span>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 pb-24">
+        
+        <section id="doz-bolumu" class="bg-white rounded-2xl shadow-sm p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                <i class="fa-solid fa-calculator text-red-500"></i> Akıllı Doz Hesaplayıcı
+            </h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600">Hasta Kilosu (kg)</label>
+                    <input type="number" id="kilo" placeholder="Örn: 10" class="w-full mt-1 p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-2xl font-bold">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-600">İlaç Seçin</label>
+                    <select id="ilac" class="w-full mt-1 p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none text-lg">
+                        <option value="0.01">Adrenalin (0.01 mg/kg)</option>
+                        <option value="0.02">Atropin (0.02 mg/kg)</option>
+                        <option value="5">Amiodaron (5 mg/kg)</option>
+                    </select>
+                </div>
+
+                <button onclick="hesapla()" class="w-full bg-red-600 text-white font-bold py-4 rounded-xl hover:bg-red-700 transition shadow-md active:scale-95">
+                    HESAPLA
+                </button>
+
+                <div id="sonuc-kutusu" class="hidden mt-4 p-6 bg-red-50 border-2 border-red-200 rounded-2xl text-center">
+                    <p class="text-sm text-red-600 font-medium">UYGULANACAK DOZ</p>
+                    <p id="sonuc" class="text-4xl font-black text-red-700">--</p>
+                    <p id="sesli-uyari" class="text-xs mt-2 text-gray-500 italic"></p>
+                </div>
+            </div>
+        </section>
+
+        <section id="algoritma-bolumu" class="hidden bg-white rounded-2xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold mb-4 text-gray-800">İnteraktif Algoritmalar</h2>
+            <div class="p-8 text-center border-2 border-dashed border-gray-200 rounded-xl">
+                <i class="fa-solid fa-diagram-project text-4xl text-gray-300 mb-2"></i>
+                <p class="text-gray-500">Algoritmalar yakında buraya eklenecek.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around p-2 shadow-2xl">
+        <button onclick="sekmeDegistir('doz')" id="tab-doz" class="flex flex-col items-center p-2 active-tab">
+            <i class="fa-solid fa-vial text-xl"></i>
+            <span class="text-xs">Doz</span>
+        </button>
+        <button onclick="sekmeDegistir('algoritma')" id="tab-algo" class="flex flex-col items-center p-2 text-gray-400">
+            <i class="fa-solid fa-route text-xl"></i>
+            <span class="text-xs">Algoritma</span>
+        </button>
+        <button onclick="sesliKomut()" class="flex flex-col items-center p-2 text-gray-400">
+            <div class="bg-red-600 text-white p-3 rounded-full -mt-8 shadow-lg">
+                <i class="fa-solid fa-microphone text-xl"></i>
+            </div>
+            <span class="text-xs mt-1">Dinle</span>
+        </button>
+    </nav>
+
+    <script>
+        function hesapla() {
+            const kilo = document.getElementById('kilo').value;
+            const dozEsnas = document.getElementById('ilac').value;
+            const sonucKutusu = document.getElementById('sonuc-kutusu');
+            const sonucYazi = document.getElementById('sonuc');
+
+            if(kilo > 0) {
+                const hesap = (kilo * dozEsnas).toFixed(2);
+                sonucYazi.innerText = hesap + " mg";
+                sonucKutusu.classList.remove('hidden');
+                
+                // Sesli Geri Bildirim
+                const mesaj = new SpeechSynthesisUtterance("Uygulanacak doz: " + hesap + " miligram");
+                mesaj.lang = 'tr-TR';
+                window.speechSynthesis.speak(mesaj);
+            } else {
+                alert("Lütfen kilo giriniz!");
+            }
+        }
+
+        function sekmeDegistir(tip) {
+            if(tip === 'doz') {
+                document.getElementById('doz-bolumu').classList.remove('hidden');
+                document.getElementById('algoritma-bolumu').classList.add('hidden');
+                document.getElementById('tab-doz').classList.add('active-tab');
+                document.getElementById('tab-algo').classList.remove('active-tab');
+            } else {
+                document.getElementById('doz-bolumu').classList.add('hidden');
+                document.getElementById('algoritma-bolumu').classList.remove('hidden');
+                document.getElementById('tab-doz').classList.remove('active-tab');
+                document.getElementById('tab-algo').classList.add('active-tab');
+            }
+        }
+
+        function sesliKomut() {
+            const mesaj = new SpeechSynthesisUtterance("Sesli asistan aktif. Şu an dinleme modülü hazırlanıyor.");
+            mesaj.lang = 'tr-TR';
+            window.speechSynthesis.speak(mesaj);
+        }
+    </script>
+</body>
+</html>
