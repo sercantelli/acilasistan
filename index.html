@@ -202,7 +202,7 @@
         }
 
         // --- ADIM ADIM MODU ---
-     function showStep(id) {
+    function showStep(id) {
     const s = db_algos[id];
     if(!s) { location.reload(); return; }
     
@@ -210,20 +210,24 @@
     const body = document.getElementById('algo-body');
     let txt = getCalculatedText(s.soru);
 
-    // --- GELİŞMİŞ SAYAÇ YAKALAYICI ---
-    // Metnin içinde (SAYAÇ:300) veya (SAYAÇ:0) gibi ifadeleri arar
+    // --- GELİŞMİŞ SAYAÇ YAKALAYICI (MÜKERRER KONTROLLÜ) ---
     const timerMatch = txt.match(/\(SAYAÇ:(\d+)\)/);
     if (timerMatch) {
-        const alertVal = parseInt(timerMatch[1]); // Parantez içindeki rakamı alır
-        const label = id.includes('adrenalin') ? "Adrenalin" : "BEKLEME SÜRESİ";
-        createTimer(label, alertVal);
+        const alertVal = parseInt(timerMatch[1]);
+        const label = id.includes('adrenalin') ? "Adrenalin" : "GÜVENLİK BEKLEME";
+        
+        // Eğer bu isimde bir sayaç zaten çalışıyorsa yenisini başlatma (üst üste binmesin)
+        const isRunning = Array.from(document.querySelectorAll('.timer-card'))
+                               .some(card => card.innerText.includes(label));
+        if (!isRunning) {
+            createTimer(label, alertVal);
+        }
     }
 
     let theme = { bg: "bg-gray-50", text: "text-gray-800", icon: "" };
     if(txt.includes("[ONAY]")) theme = { bg: "bg-emerald-50", text: "text-emerald-900", icon: '<i class="fa-solid fa-phone-volume text-emerald-500 text-5xl mb-4"></i>' };
     else if(txt.includes("[KRİTİK]")) theme = { bg: "bg-red-600", text: "text-white", icon: '<i class="fa-solid fa-biohazard text-white text-5xl mb-4"></i>' };
 
-    // --- YEŞİL BUTON VE DİĞERLERİ ---
     const eBtnClass = s.e_metin === "GÜVENLİK SAĞLANDI" ? "bg-emerald-600 shadow-emerald-200" : "bg-red-600 shadow-red-200";
 
     body.innerHTML = `
@@ -232,8 +236,8 @@
             <p class="text-2xl font-bold ${theme.text} leading-tight">${txt.replace(/\[.*?\]/g, '').replace(/\(SAYAÇ:\d+\)/g, '')}</p>
         </div>
         <div class="grid grid-cols-1 gap-4">
-            ${s.e_metin ? `<button onclick="handleStepClick('${s.e_hedef}', '${id}')" class="w-full p-6 ${eBtnClass} text-white rounded-3xl font-black btn-action uppercase shadow-xl text-xl">${s.e_metin}</button>` : ''}
-            ${s.h_metin ? `<button onclick="handleStepClick('${s.h_hedef}', '${id}')" class="w-full p-6 bg-gray-900 text-white rounded-3xl font-black btn-action text-lg">${s.h_metin}</button>` : ''}
+            ${s.e_metin ? `<button onclick="handleStepClick('${s.e_hedef}', '${id}', '${s.e_metin}')" class="w-full p-6 ${eBtnClass} text-white rounded-3xl font-black btn-action uppercase shadow-xl text-xl">${s.e_metin}</button>` : ''}
+            ${s.h_metin ? `<button onclick="handleStepClick('${s.h_hedef}', '${id}', '${s.h_metin}')" class="w-full p-6 bg-gray-900 text-white rounded-3xl font-black btn-action text-lg">${s.h_metin}</button>` : ''}
         </div>
     `;
     speak(s.ses || txt.replace(/<[^>]*>?/gm, '').replace(/\(SAYAÇ:\d+\)/g, ''));
