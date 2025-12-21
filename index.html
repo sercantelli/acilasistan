@@ -202,25 +202,20 @@
         }
 
         // --- ADIM ADIM MODU ---
-       function showStep(id) {
+      function showStep(id) {
     const s = db_algos[id];
     if(!s) { location.reload(); return; }
     
-    // Eğer aynı ID zaten geçmişte varsa (döngü), geçmişi temizleme veya kontrol ekleyebilirsin
     if(navHistory[navHistory.length-1] !== id) navHistory.push(id);
-    
     const body = document.getElementById('algo-body');
     let txt = getCalculatedText(s.soru);
 
-    // --- OTOMATİK SAYAÇ TETİKLEYİCİ ---
-    // Eğer soruda "(SAYAÇ BAŞLATILDI)" geçiyorsa otomatik sayaç başlat
+    // --- SONSUZ (İLERİ) SAYAÇ TETİKLEYİCİ ---
     if (txt.includes("(SAYAÇ BAŞLATILDI)")) {
-        // Eğer zaten bu isimde bir sayaç çalışmıyorsa başlat (tekrarı önlemek için)
-        createTimer("Güvenlik Bekleme", 600); // 10 dakikalık bir bekleme süresi
+        createTimer("GÜVENLİK BEKLEME", null); // null = İleri sayım (Sonsuz)
     }
 
     let theme = { bg: "bg-gray-50", text: "text-gray-800", icon: "" };
-    
     if(txt.includes("[ONAY]")) theme = { bg: "bg-emerald-50", text: "text-emerald-900", icon: '<i class="fa-solid fa-phone-volume text-emerald-500 text-5xl mb-4 animate-bounce"></i>' };
     else if(txt.includes("[UYARI]")) theme = { bg: "bg-amber-50", text: "text-amber-900", icon: '<i class="fa-solid fa-triangle-exclamation text-amber-500 text-5xl mb-4"></i>' };
     else if(txt.includes("[KRİTİK]")) theme = { bg: "bg-red-600", text: "text-white", icon: '<i class="fa-solid fa-biohazard text-white text-5xl mb-4"></i>' };
