@@ -371,7 +371,7 @@
         const timerCards = document.querySelectorAll('.timer-card');
         timerCards.forEach(card => {
             // Kartın içindeki metne bakıyoruz, eğer güvenlik bekleme ise siliyoruz
-            if (card.innerText.includes("GÜVENLİK BEKLEME")) {
+            if (card.innerText.includes("GÜVENLİ BÖLGEDE BEKLEME SÜRESİ")) {
                 const tid = card.id;
                 clearInterval(activeTimers[tid]); // Sayacı durdur
                 card.remove(); // Ekrandan kaldır
