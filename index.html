@@ -3,68 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ACİL ASİSTAN | DOSAGE REMINDER</title>
+    <title>ACİL ASİSTAN | MARDİN 112</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
+        .active-tab { color: #ef4444; border-top: 4px solid #ef4444; }
         .btn-action { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .btn-action:active { transform: scale(0.96); }
         #reminder-modal { display: none; backdrop-filter: blur(8px); }
         .timer-glow { animation: timerGlow 2s infinite; }
-        @keyframes timerGlow { 0% { box-shadow: 0 0 10px rgba(239,68,68,0.2); } 50% { box-shadow: 0 0 25px rgba(239,68,68,0.5); } 100% { box-shadow: 0 0 10px rgba(239,68,68,0.2); } }
+        @keyframes timerGlow { 0% { box-shadow: 0 0 5px rgba(239,68,68,0.2); } 50% { box-shadow: 0 0 15px rgba(239,68,68,0.5); } 100% { box-shadow: 0 0 5px rgba(239,68,68,0.2); } }
     </style>
 </head>
 <body class="pb-24">
 
     <div id="reminder-modal" class="fixed inset-0 z-[150] flex items-center justify-center p-6 bg-black/70">
         <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl text-center space-y-6 border-4 border-red-500">
-            <div class="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-4xl animate-pulse">
-                <i class="fa-solid fa-syringe"></i>
+            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-3xl animate-pulse">
+                <i class="fa-solid fa-clock"></i>
             </div>
-            <h3 class="text-2xl font-black text-gray-900 leading-tight">ADRENALİN ZAMANI!</h3>
-            <p class="text-gray-500 font-medium">İlk dozdan bu yana 5 dakika geçti. 2. veya 3. doz gerekiyor mu? (Max 3 doz)</p>
+            <h3 class="text-2xl font-black text-gray-900 leading-tight uppercase">5 Dakika Doldu</h3>
+            <p class="text-gray-500 font-medium text-sm">Adrenalin etkisini değerlendir. Kardiyovasküler bulgular düzeldi mi?</p>
             
-            <div id="recalc-dose-area" class="bg-red-50 p-4 rounded-2xl border border-red-100 hidden">
-                <p class="text-xs font-bold text-red-400 uppercase tracking-widest mb-1">Hesaplanan Tekrar Dozu</p>
+            <div id="reminder-calc" class="bg-red-50 p-4 rounded-2xl border border-red-100 hidden">
+                <p class="text-[10px] font-bold text-red-400 uppercase tracking-widest mb-1">Hesaplanan Tekrar Dozu</p>
                 <h4 id="reminder-dose-val" class="text-3xl font-black text-red-600 tracking-tighter">-- mg</h4>
             </div>
 
-            <div class="grid grid-cols-1 gap-3">
-                <button onclick="applyNextDose()" class="p-5 bg-red-600 text-white rounded-2xl font-black btn-action shadow-xl shadow-red-200 uppercase">2. DOZU UYGULA VE SAYAÇ BAŞLAT</button>
-                <button onclick="closeReminder()" class="p-4 bg-gray-100 text-gray-400 rounded-2xl font-bold btn-action">HASTA STABİL / KAPAT</button>
+            <div class="grid grid-cols-1 gap-2">
+                <button onclick="applyNextDose()" class="p-5 bg-red-600 text-white rounded-2xl font-black btn-action shadow-lg uppercase text-sm">Yeni Doz Uygula</button>
+                <button onclick="closeReminder()" class="p-4 bg-gray-100 text-gray-400 rounded-2xl font-bold btn-action text-xs">Stabil / Kapat</button>
             </div>
         </div>
     </div>
 
     <header class="bg-white sticky top-0 z-50 border-b p-4 shadow-sm flex justify-between items-center">
         <div class="flex items-center gap-3">
-            <h1 class="font-black text-2xl tracking-tighter text-gray-900 leading-none">ACİL<span class="text-red-600">ASİSTAN</span></h1>
-            
-            <div id="persistent-timer" class="hidden flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-50 text-red-600 font-black text-xs timer-glow">
-                <i class="fa-solid fa-hourglass-half"></i>
+            <h1 class="font-black text-2xl tracking-tighter text-gray-900">ACİL<span class="text-red-600">ASİSTAN</span></h1>
+            <div id="persistent-timer" class="hidden flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-50 text-red-600 font-black text-[10px] timer-glow">
+                <i class="fa-solid fa-stopwatch animate-pulse"></i>
                 <span id="global-clock">05:00</span>
             </div>
         </div>
-        <div id="weight-tag" class="hidden bg-gray-100 text-gray-500 px-3 py-1.5 rounded-xl text-xs font-black border border-gray-200"></div>
+        <div id="weight-tag" class="hidden bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-[10px] font-black border border-gray-200 uppercase tracking-widest"></div>
     </header>
 
-    <main class="max-w-lg mx-auto p-4 space-y-4">
+    <main class="max-w-lg mx-auto p-4">
         <section id="modul-doz" class="space-y-4">
-            <div class="bg-white rounded-[2.5rem] p-6 border shadow-sm border-gray-100">
-                <input type="number" id="kiloInput" placeholder="Kilo (kg)" class="w-full bg-gray-50 rounded-3xl p-5 text-4xl font-black mb-4 outline-none border-2 border-transparent focus:border-red-100 transition-all">
-                <select id="ilacSelect" class="w-full bg-gray-50 rounded-2xl p-4 text-lg font-bold mb-4 outline-none appearance-none"></select>
-                <button onclick="hesapla()" class="w-full bg-red-600 text-white font-bold py-5 rounded-3xl text-xl shadow-lg btn-action">HESAPLA</button>
-                <div id="sonucPanel" class="hidden mt-4 bg-gray-900 rounded-[2.5rem] p-6 text-center text-white">
-                    <h3 id="sonucDeger" class="text-5xl font-black mb-1 tracking-tighter">--</h3>
-                    <p id="sonucMetin" class="text-sm font-bold text-red-400"></p>
+            <div class="bg-white rounded-[2.5rem] p-6 border shadow-sm">
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Kilo (kg)</label>
+                <input type="number" id="kiloInput" placeholder="0" class="w-full bg-gray-50 rounded-2xl p-5 text-4xl font-black mb-4 outline-none border-2 border-transparent focus:border-red-100">
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">İlaç</label>
+                <select id="ilacSelect" class="w-full bg-gray-50 rounded-2xl p-4 text-lg font-bold mb-6 outline-none appearance-none"></select>
+                <button onclick="hesapla()" class="w-full bg-red-600 text-white font-black py-5 rounded-2xl text-xl shadow-lg btn-action">HESAPLA</button>
+                <div id="sonucPanel" class="hidden mt-6 bg-gray-900 rounded-[2rem] p-6 text-center text-white animate-bounce-in">
+                    <h3 id="sonucDeger" class="text-5xl font-black mb-1">--</h3>
+                    <p id="sonucMetin" class="text-sm font-bold text-red-400 uppercase"></p>
                 </div>
             </div>
         </section>
 
         <section id="modul-algo" class="hidden">
-            <div id="algo-screen" class="bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm min-h-[500px] flex flex-col">
+            <div id="algo-screen" class="bg-white rounded-[2.5rem] p-6 border shadow-sm min-h-[480px] flex flex-col">
                 <div id="algo-body" class="flex-grow flex flex-col justify-center text-center space-y-4"></div>
             </div>
         </section>
@@ -75,11 +77,11 @@
             <i class="fa-solid fa-calculator text-2xl"></i><span class="text-[10px] font-bold">DOZ</span>
         </button>
         <button onclick="tabDegistir('algo')" id="nav-algo" class="flex flex-col items-center gap-1 p-2 text-gray-300">
-            <i class="fa-solid fa-route text-2xl"></i><span class="text-[10px] font-bold">ALGORİTMA</span>
+            <i class="fa-solid fa-route text-2xl"></i><span class="text-[10px] font-bold">PROTOKOL</span>
         </button>
         <div class="w-16"></div>
         <button onclick="location.reload()" class="flex flex-col items-center gap-1 p-2 text-gray-300">
-            <i class="fa-solid fa-house text-2xl"></i><span class="text-[10px] font-bold uppercase">Anasayfa</span>
+            <i class="fa-solid fa-house text-2xl"></i><span class="text-[10px] font-bold uppercase tracking-tighter">Başlat</span>
         </button>
     </nav>
 
@@ -90,126 +92,132 @@
         let db_drugs = [];
         let db_algos = {};
         let patientWeight = null;
-        let adrenalineCount = 0;
         let adrenalineTimer = null;
+        let doseCount = 0;
 
-        // --- SAYAÇ VE HATIRLATICI MANTIĞI ---
-        function startAdrenalineTimer() {
+        // --- EN STABİL CSV AYRIŞTIRICI ---
+        function parseCSVLine(line) {
+            let arr = [];
+            let quote = false;
+            let col = '';
+            for (let c of line) {
+                if (c === '"') quote = !quote;
+                else if (c === ',' && !quote) {
+                    arr.push(col.trim());
+                    col = '';
+                } else col += c;
+            }
+            arr.push(col.trim());
+            return arr;
+        }
+
+        // --- SAYAÇ SİSTEMİ ---
+        function startTimer() {
             clearInterval(adrenalineTimer);
-            let timer = 300; // 5 dakika 
+            let timer = 300;
             document.getElementById('persistent-timer').classList.remove('hidden');
-            const clock = document.getElementById('global-clock');
-
             adrenalineTimer = setInterval(() => {
                 let m = parseInt(timer / 60, 10);
                 let s = parseInt(timer % 60, 10);
-                clock.textContent = (m<10?"0"+m:m) + ":" + (s<10?"0"+s:s);
-
+                document.getElementById('global-clock').textContent = (m<10?"0"+m:m) + ":" + (s<10?"0"+s:s);
                 if (--timer < 0) {
                     clearInterval(adrenalineTimer);
-                    showAdrenalineReminder();
+                    showReminder();
                 }
             }, 1000);
         }
 
-        function showAdrenalineReminder() {
-            if(adrenalineCount >= 3) return; // Maksimum 3 doz 
+        function showReminder() {
+            if(doseCount >= 3) return;
             const modal = document.getElementById('reminder-modal');
-            const doseArea = document.getElementById('recalc-dose-area');
-            
             if(patientWeight) {
-                let dose = (patientWeight * 0.01).toFixed(2);
-                if(dose > 0.5) dose = 0.5; // Max 0.5mg [cite: 17]
-                document.getElementById('reminder-dose-val').innerText = dose + " mg";
-                doseArea.classList.remove('hidden');
+                let d = (patientWeight * 0.01).toFixed(2);
+                if(d > 0.5) d = 0.5;
+                document.getElementById('reminder-dose-val').innerText = d + " mg";
+                document.getElementById('reminder-calc').classList.remove('hidden');
             }
-            
             modal.style.display = 'flex';
-            speak("Beş dakika doldu. Kardiyovasküler bulgular düzelmediyse yeni doz adrenalini değerlendirin.");
+            speak("Adrenalin için beş dakika doldu. Lütfen hastayı değerlendirin.");
         }
 
         function applyNextDose() {
-            adrenalineCount++;
+            doseCount++;
             closeReminder();
-            startAdrenalineTimer(); // Sayacı tekrar başlat 
-            speak("İkinci doz uygulandı. Sayaç sıfırlandı.");
+            startTimer();
+            speak("Yeni doz uygulandı. Sayaç yeniden başlatıldı.");
         }
 
-        function closeReminder() {
-            document.getElementById('reminder-modal').style.display = 'none';
-        }
+        function closeReminder() { document.getElementById('reminder-modal').style.display = 'none'; }
 
-        // --- ALGORİTMA VE VERİ ---
+        // --- VERİ YÜKLEME ---
         async function init() {
-            const resI = await fetch(URL_ILAC);
-            const textI = await resI.text();
-            textI.split('\n').slice(1).forEach(l => {
-                const c = l.split(',');
-                if(c[0]) db_drugs.push({ad: c[0].replace(/"/g,''), doz: parseFloat(c[1]), birim: (c[2]||'mg').replace(/"/g,'')});
-            });
-            const sel = document.getElementById('ilacSelect');
-            db_drugs.forEach((d, i) => sel.innerHTML += `<option value="${i}">${d.ad}</option>`);
+            try {
+                const rI = await fetch(URL_ILAC);
+                const tI = await rI.text();
+                tI.split('\n').slice(1).forEach(l => {
+                    const c = parseCSVLine(l);
+                    if(c[0]) db_drugs.push({ad: c[0], doz: parseFloat(c[1]), birim: c[2]||'mg'});
+                });
+                const sel = document.getElementById('ilacSelect');
+                db_drugs.forEach((d, i) => sel.innerHTML += `<option value="${i}">${d.ad}</option>`);
 
-            const resA = await fetch(URL_ALGO);
-            const textA = await resA.text();
-            textA.split('\n').slice(1).forEach(l => {
-                const c = l.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
-                const cleanC = c.map(v => v.replace(/^"|"$/g, '').trim());
-                if(cleanC[0]) db_algos[cleanC[0]] = { soru: cleanC[1], e_metin: cleanC[2], e_hedef: cleanC[3], h_metin: cleanC[4], h_hedef: cleanC[5], ses: cleanC[6] };
-            });
-            renderMenu();
+                const rA = await fetch(URL_ALGO);
+                const tA = await rA.text();
+                tA.split('\n').slice(1).forEach(l => {
+                    const c = parseCSVLine(l);
+                    if(c[0]) db_algos[c[0]] = { soru: c[1], e_metin: c[2], e_hedef: c[3], h_metin: c[4], h_hedef: c[5], ses: c[6] };
+                });
+                renderMenu();
+            } catch(e) { console.error("Yükleme Hatası:", e); }
         }
 
         function renderMenu() {
             const body = document.getElementById('algo-body');
-            body.innerHTML = '<h3 class="font-black text-2xl text-gray-800 mb-6">Protokol Seçin</h3>';
+            body.innerHTML = '<h3 class="font-black text-2xl text-gray-800 mb-6 uppercase tracking-tighter">Protokoller</h3>';
             Object.keys(db_algos).forEach(id => {
                 if(id.endsWith('_basla')) {
-                    body.innerHTML += `<button onclick="startAlgo('${id}')" class="w-full p-6 bg-blue-600 text-white rounded-3xl font-black mb-3 text-lg flex justify-between items-center btn-action shadow-lg shadow-blue-50">
-                        ${id.replace('_basla','').replace('_',' ')} <i class="fa-solid fa-arrow-right"></i>
+                    body.innerHTML += `<button onclick="startAlgo('${id}')" class="w-full p-6 bg-blue-600 text-white rounded-3xl font-black mb-3 text-lg flex justify-between items-center btn-action uppercase shadow-xl shadow-blue-50">
+                        ${id.replace('_basla','').replace('_',' ')} <i class="fa-solid fa-chevron-right opacity-50"></i>
                     </button>`;
                 }
             });
         }
 
         function startAlgo(id) {
-            const k = prompt("Hasta Kilosu (kg):");
+            const k = prompt("Hesaplamalar için kilo girin (kg):");
             patientWeight = k ? parseFloat(k) : null;
             if(patientWeight) {
-                document.getElementById('weight-tag').innerText = patientWeight + " kg";
+                document.getElementById('weight-tag').innerText = patientWeight + " KG";
                 document.getElementById('weight-tag').classList.remove('hidden');
             }
             showStep(id);
         }
 
         function showStep(id) {
-            const step = db_algos[id];
-            if(!step) return;
+            const s = db_algos[id];
+            if(!s) return;
             const body = document.getElementById('algo-body');
-            
-            let text = step.soru;
+            let text = s.soru;
+
             if(patientWeight) {
                 text = text.replace(/{([\d.]+)}/g, (m, p1) => `<span class="text-red-600 font-black underline">${(parseFloat(p1) * patientWeight).toFixed(2)}</span>`);
             }
 
             body.innerHTML = `
-                <div class="algo-card p-8 bg-gray-50 rounded-[2.5rem] mb-6 border">
+                <div class="p-8 bg-gray-50 rounded-[2.5rem] mb-8 border border-gray-100 shadow-inner">
                     <p class="text-2xl font-bold text-gray-800 leading-tight">${text}</p>
                 </div>
                 <div class="space-y-3">
-                    ${step.e_metin ? `<button onclick="handleStepClick('${step.e_hedef}', '${id}')" class="w-full p-5 bg-red-600 text-white rounded-2xl font-black btn-action uppercase shadow-xl">${step.e_metin}</button>` : ''}
-                    ${step.h_metin ? `<button onclick="showStep('${step.h_hedef}')" class="w-full p-5 bg-gray-800 text-white rounded-2xl font-black btn-action uppercase">${step.h_metin}</button>` : ''}
+                    ${s.e_metin ? `<button onclick="btnClick('${s.e_hedef}', '${id}')" class="w-full p-5 bg-red-600 text-white rounded-2xl font-black btn-action shadow-xl uppercase">${s.e_metin}</button>` : ''}
+                    ${s.h_metin ? `<button onclick="showStep('${s.h_hedef}')" class="w-full p-5 bg-gray-800 text-white rounded-2xl font-black btn-action uppercase">${s.h_metin}</button>` : ''}
                 </div>
             `;
-            speak(step.ses || text.replace(/<[^>]*>?/gm, ''));
+            speak(s.ses || text.replace(/<[^>]*>?/gm, ''));
         }
 
-        function handleStepClick(targetId, currentId) {
-            if(currentId === 'ana_adrenalin_doz') {
-                adrenalineCount = 1;
-                startAdrenalineTimer(); // İlk dozdan sonra sayaç başlar 
-            }
-            showStep(targetId);
+        function btnClick(target, current) {
+            if(current === 'ana_adrenalin_doz') { doseCount = 1; startTimer(); }
+            showStep(target);
         }
 
         function hesapla() {
@@ -220,7 +228,7 @@
             document.getElementById('sonucDeger').innerText = res + " " + (i.birim || 'mg');
             document.getElementById('sonucMetin').innerText = i.ad;
             document.getElementById('sonucPanel').classList.remove('hidden');
-            speak(res + " " + i.birim + " " + i.ad);
+            speak("Sonuç: " + res + " " + i.birim);
         }
 
         function tabDegistir(h) {
