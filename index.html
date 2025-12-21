@@ -361,11 +361,26 @@
             });
             overlay.style.display = 'flex';
         }
-        function handleStepClick(target, current) {
-    // Adrenalin kontrolü (Eski mantık devam etsin)
-    if(current.includes('adrenalin')) createTimer("Adrenalin", 300);
+        function handleStepClick(target, current, btnText) {
+    // --- SAYAÇ KAPATMA MANTIĞI ---
+    if (btnText === "GÜVENLİK SAĞLANDI") {
+        const timerCards = document.querySelectorAll('.timer-card');
+        timerCards.forEach(card => {
+            // Kartın içindeki metne bakıyoruz, eğer güvenlik bekleme ise siliyoruz
+            if (card.innerText.includes("GÜVENLİK BEKLEME")) {
+                const tid = card.id;
+                clearInterval(activeTimers[tid]); // Sayacı durdur
+                card.remove(); // Ekrandan kaldır
+            }
+        });
+    }
+
+    // Adrenalin kontrolü (ileri sayım başlatır)
+    if(current.includes('adrenalin')) {
+        createTimer("Adrenalin", null); 
+    }
     
-    // Yeni adıma geç
+    // Bir sonraki adıma geç
     showStep(target);
 }
         function goBack() { if(navHistory.length > 1) { navHistory.pop(); showStep(navHistory.pop()); } else { location.reload(); } }
