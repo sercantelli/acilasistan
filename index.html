@@ -278,30 +278,40 @@
 }
         // --- GİRİŞ VE MODAL YÖNETİMİ ---
         function askWeight(id) {
-            selectedAlgoId = id;
-            showModal({
-                title: 'HASTA BİLGİSİ', icon: 'fa-weight-scale', iconBg: 'bg-blue-100', iconColor: 'text-blue-600',
-                content: `
-                    <input type="number" id="modalKiloInput" placeholder="Kilo (kg)" class="w-full bg-gray-50 rounded-2xl p-5 text-center text-4xl font-black outline-none border-2 border-blue-100 mb-4">
-                    <div class="flex p-1 bg-slate-100 rounded-2xl">
-                        <button id="btnAgeU" onclick="ageGroup='under12'; this.classList.add('bg-white','text-red-600'); document.getElementById('btnAgeO').classList.remove('bg-white','text-red-600');" class="flex-1 py-3 rounded-xl font-bold text-[10px] bg-white text-red-600 shadow-sm">&lt; 12 YAŞ</button>
-                        <button id="btnAgeO" onclick="ageGroup='over12'; this.classList.add('bg-white','text-red-600'); document.getElementById('btnAgeU').classList.remove('bg-white','text-red-600');" class="flex-1 py-3 rounded-xl font-bold text-[10px] text-slate-500">&ge; 12 YAŞ</button>
-                    </div>
-                `,
-                buttons: [
-                    { text: 'DEVAM ET', class: 'bg-blue-600 text-white mt-4', action: () => {
-                        const val = document.getElementById('modalKiloInput').value;
-                        patientWeight = val ? parseFloat(val) : null;
-                        if(patientWeight) {
-                            document.getElementById('weight-tag').innerText = patientWeight + " KG";
-                            document.getElementById('weight-tag').classList.remove('hidden');
-                        }
-                        askViewMode();
-                    }, keepOpen: true }
-                ]
-            });
-        }
+    selectedAlgoId = id;
 
+    // --- AKILLI KONTROL ---
+    // Seçilen algoritmada hiç ilaç dozu ({...}) var mı kontrol et
+    if (!checkIfNeedsWeight(id)) {
+        patientWeight = null; // Kilo gerekmiyor
+        document.getElementById('weight-tag').classList.add('hidden'); // Kilo etiketini gizle
+        askViewMode(); // Direkt görünüm seçme moduna geç
+        return;
+    }
+
+    // Eğer ilaç varsa modalı göster (Mevcut kodun)
+    showModal({
+        title: 'HASTA BİLGİSİ', icon: 'fa-weight-scale', iconBg: 'bg-blue-100', iconColor: 'text-blue-600',
+        content: `
+            <input type="number" id="modalKiloInput" placeholder="Kilo (kg)" class="w-full bg-gray-50 rounded-2xl p-5 text-center text-4xl font-black outline-none border-2 border-blue-100 mb-4">
+            <div class="flex p-1 bg-slate-100 rounded-2xl">
+                <button id="btnAgeU" onclick="ageGroup='under12'; this.classList.add('bg-white','text-red-600'); document.getElementById('btnAgeO').classList.remove('bg-white','text-red-600');" class="flex-1 py-3 rounded-xl font-bold text-[10px] bg-white text-red-600 shadow-sm">&lt; 12 YAŞ</button>
+                <button id="btnAgeO" onclick="ageGroup='over12'; this.classList.add('bg-white','text-red-600'); document.getElementById('btnAgeU').classList.remove('bg-white','text-red-600');" class="flex-1 py-3 rounded-xl font-bold text-[10px] text-slate-500">&ge; 12 YAŞ</button>
+            </div>
+        `,
+        buttons: [
+            { text: 'DEVAM ET', class: 'bg-blue-600 text-white mt-4', action: () => {
+                const val = document.getElementById('modalKiloInput').value;
+                patientWeight = val ? parseFloat(val) : null;
+                if(patientWeight) {
+                    document.getElementById('weight-tag').innerText = patientWeight + " KG";
+                    document.getElementById('weight-tag').classList.remove('hidden');
+                }
+                askViewMode();
+            }, keepOpen: true }
+        ]
+    });
+}
         function askViewMode() {
             showModal({
                 title: 'GÖRÜNÜM SEÇİN', icon: 'fa-eye', iconBg: 'bg-red-100', iconColor: 'text-red-600',
@@ -418,6 +428,28 @@
                 }});
             } catch(e) { console.error(e); }
         }
+
+        function checkIfNeedsWeight(startId) {
+    let queue = [startId];
+    let visited = new Set();
+    
+    while (queue.length > 0) {
+        let currentId = queue.shift();
+        if (visited.has(currentId) || !db_algos[currentId]) continue;
+        
+        visited.add(currentId);
+        let step = db_algos[currentId];
+        
+        // Eğer sorunun içinde süslü parantez varsa, bu algoritma kilo bilgisi gerektiriyor demektir.
+        if (step.soru.includes('{')) return true;
+        
+        // Diğer dalları sıraya ekle
+        if (step.e_hedef) queue.push(step.e_hedef);
+        if (step.h_hedef) queue.push(step.h_hedef);
+    }
+    return false; // Hiçbir adımda ilaç dozu bulunamadı.
+}
+        
         function hesapla() {
             const k = document.getElementById('kiloInput').value;
             const i = db_drugs[document.getElementById('ilacSelect').value];
