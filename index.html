@@ -7,16 +7,21 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         .active-tab { color: #ef4444; border-top: 4px solid #ef4444; }
         .btn-action { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .btn-action:active { transform: scale(0.96); }
-        #reminder-modal { display: none; backdrop-filter: blur(8px); }
+        #reminder-modal { display: none; backdrop-filter: blur(10px); }
+        
+        /* Dinamik Tema Animasyonları */
         .timer-hero { animation: slideDown 0.4s ease-out; box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.2); }
         @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .timer-pulse { animation: pulseBg 2s infinite; }
         @keyframes pulseBg { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        
+        .algo-card { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body class="pb-24">
@@ -43,8 +48,8 @@
 
     <header class="bg-white sticky top-0 z-40 border-b p-4 shadow-sm flex justify-between items-center">
         <div>
-            <h1 class="font-black text-2xl tracking-tighter text-gray-900">ACİL<span class="text-red-600">ASİSTAN</span></h1>
-            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mt-1">Karar Destek Sistemi</p>
+            <h1 class="font-black text-2xl tracking-tighter text-gray-900 leading-none">ACİL<span class="text-red-600">ASİSTAN</span></h1>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1 leading-none">Karar Destek Sistemi</p>
         </div>
         <div id="weight-tag" class="hidden bg-gray-100 text-gray-600 px-3 py-1.5 rounded-xl text-xs font-black border border-gray-200">-- KG</div>
     </header>
@@ -60,26 +65,23 @@
                     <span class="text-[10px] font-black uppercase tracking-[0.3em] opacity-80">Adrenalin Tekrar Süresi</span>
                     <div class="flex items-center gap-3">
                         <i class="fa-solid fa-stopwatch text-3xl timer-pulse"></i>
-                        <h2 id="global-clock" class="text-5xl font-black tracking-tighter">05:00</h2>
+                        <h2 id="global-clock" class="text-5xl font-black tracking-tighter leading-none">05:00</h2>
                     </div>
-                    <p class="text-[10px] font-bold mt-2 opacity-60 italic">Lütfen hastanın stabilizasyonunu takip edin.</p>
                 </div>
             </div>
         </div>
 
         <section id="modul-doz" class="space-y-4">
-            <div class="bg-white rounded-[2.5rem] p-6 border shadow-sm">
-                <div class="mb-4">
-                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Hasta Kilosu</label>
-                    <input type="number" id="kiloInput" placeholder="0" class="w-full bg-gray-50 rounded-2xl p-5 text-4xl font-black mt-1 outline-none border-2 border-transparent focus:border-red-100">
-                </div>
-                <div class="mb-6">
-                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">İlaç Seçimi</label>
-                    <select id="ilacSelect" class="w-full bg-gray-50 rounded-2xl p-4 text-lg font-bold mt-1 outline-none appearance-none"></select>
-                </div>
-                <button onclick="hesapla()" class="w-full bg-red-600 text-white font-black py-5 rounded-2xl text-xl shadow-lg btn-action uppercase">Doz Hesapla</button>
+            <div class="bg-white rounded-[2.5rem] p-6 border shadow-sm border-gray-100">
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Hasta Kilosu</label>
+                <input type="number" id="kiloInput" placeholder="0" class="w-full bg-gray-50 rounded-2xl p-6 text-4xl font-black mt-1 mb-4 outline-none border-2 border-transparent focus:border-red-100">
+                
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">İlaç Seçimi</label>
+                <select id="ilacSelect" class="w-full bg-gray-50 rounded-2xl p-5 text-lg font-bold mt-1 mb-6 outline-none appearance-none"></select>
+
+                <button onclick="hesapla()" class="w-full bg-red-600 text-white font-black py-5 rounded-3xl text-xl shadow-lg btn-action uppercase">Doz Hesapla</button>
                 <div id="sonucPanel" class="hidden mt-6 bg-gray-900 rounded-[2rem] p-8 text-center text-white">
-                    <p class="text-xs font-bold text-gray-500 uppercase mb-2">Uygulanacak</p>
+                    <p class="text-[10px] font-bold opacity-50 uppercase tracking-widest mb-2">Uygulanacak</p>
                     <h3 id="sonucDeger" class="text-5xl font-black mb-1">--</h3>
                     <p id="sonucMetin" class="text-sm font-bold text-red-400 uppercase"></p>
                 </div>
@@ -87,22 +89,23 @@
         </section>
 
         <section id="modul-algo" class="hidden">
-            <div id="algo-screen" class="bg-white rounded-[2.5rem] p-6 border shadow-sm min-h-[480px] flex flex-col">
+            <div id="algo-screen" class="bg-white rounded-[2.5rem] p-6 border shadow-sm min-h-[500px] flex flex-col">
                 <div id="algo-body" class="flex-grow flex flex-col justify-center text-center space-y-4"></div>
             </div>
         </section>
+
     </main>
 
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t p-3 flex justify-around z-50">
-        <button onclick="tabDegistir('doz')" id="nav-doz" class="flex flex-col items-center gap-1 p-2 active-tab">
-            <i class="fa-solid fa-calculator text-2xl"></i><span class="text-[10px] font-bold uppercase tracking-tighter">Doz</span>
+        <button onclick="tabDegistir('doz')" id="nav-doz" class="flex flex-col items-center gap-1 p-2 active-tab transition-all">
+            <i class="fa-solid fa-calculator text-2xl"></i><span class="text-[10px] font-black uppercase">Doz</span>
         </button>
-        <button onclick="tabDegistir('algo')" id="nav-algo" class="flex flex-col items-center gap-1 p-2 text-gray-300">
-            <i class="fa-solid fa-route text-2xl"></i><span class="text-[10px] font-bold uppercase tracking-tighter">Protokol</span>
+        <button onclick="tabDegistir('algo')" id="nav-algo" class="flex flex-col items-center gap-1 p-2 text-gray-300 transition-all">
+            <i class="fa-solid fa-route text-2xl"></i><span class="text-[10px] font-black uppercase tracking-tighter">Protokol</span>
         </button>
         <div class="w-16"></div>
         <button onclick="location.reload()" class="flex flex-col items-center gap-1 p-2 text-gray-300">
-            <i class="fa-solid fa-house text-2xl"></i><span class="text-[10px] font-bold uppercase tracking-tighter">Anasayfa</span>
+            <i class="fa-solid fa-house text-2xl"></i><span class="text-[10px] font-black uppercase">Başlat</span>
         </button>
     </nav>
 
@@ -113,8 +116,8 @@
         let db_drugs = [];
         let db_algos = {};
         let patientWeight = null;
-        let adrenalineTimer = null;
-        let adrenalineCount = 0;
+        let adTimer = null;
+        let adCount = 0;
 
         function parseCSVLine(line) {
             let arr = []; let quote = false; let col = '';
@@ -126,29 +129,29 @@
             arr.push(col.trim()); return arr;
         }
 
+        function speak(t) {
+            window.speechSynthesis.cancel();
+            const m = new SpeechSynthesisUtterance(t);
+            m.lang = 'tr-TR';
+            window.speechSynthesis.speak(m);
+        }
+
+        // --- SAYAÇ SİSTEMİ ---
         function startTimer() {
-            clearInterval(adrenalineTimer);
-            let total = 300;
-            let timer = total;
+            clearInterval(adTimer);
+            let total = 300; let timer = total;
             document.getElementById('timer-container').classList.remove('hidden');
-            
-            adrenalineTimer = setInterval(() => {
+            adTimer = setInterval(() => {
                 let m = parseInt(timer / 60, 10);
                 let s = parseInt(timer % 60, 10);
                 document.getElementById('global-clock').textContent = (m<10?"0"+m:m) + ":" + (s<10?"0"+s:s);
-                
-                let percent = (timer / total) * 100;
-                document.getElementById('timer-progress').style.width = percent + "%";
-
-                if (--timer < 0) {
-                    clearInterval(adrenalineTimer);
-                    showReminder();
-                }
+                document.getElementById('timer-progress').style.width = (timer / total * 100) + "%";
+                if (--timer < 0) { clearInterval(adTimer); showAdModal(); }
             }, 1000);
         }
 
-        function showReminder() {
-            if(adrenalineCount >= 3) return;
+        function showAdModal() {
+            if(adCount >= 3) return;
             const modal = document.getElementById('reminder-modal');
             if(patientWeight) {
                 let d = (patientWeight * 0.01).toFixed(2);
@@ -157,18 +160,13 @@
                 document.getElementById('reminder-calc').classList.remove('hidden');
             }
             modal.style.display = 'flex';
-            speak("Adrenalin için beş dakika doldu. Durumu değerlendirin.");
+            speak("Adrenalin için beş dakika doldu.");
         }
 
-        function applyNextDose() {
-            adrenalineCount++;
-            closeReminder();
-            startTimer();
-            speak("Yeni doz uygulandı. Sayaç sıfırlandı.");
-        }
-
+        function applyNextDose() { adCount++; closeReminder(); startTimer(); speak("İkinci doz uygulandı."); }
         function closeReminder() { document.getElementById('reminder-modal').style.display = 'none'; }
 
+        // --- VERİ VE UI ---
         async function init() {
             try {
                 const rI = await fetch(URL_ILAC);
@@ -192,11 +190,11 @@
 
         function renderMenu() {
             const body = document.getElementById('algo-body');
-            body.innerHTML = '<h3 class="font-black text-2xl text-gray-800 mb-6">PROTOKOLLER</h3>';
+            body.innerHTML = '<h3 class="font-black text-2xl text-gray-800 mb-6 uppercase tracking-tighter">Protokol Seçin</h3>';
             Object.keys(db_algos).forEach(id => {
                 if(id.endsWith('_basla')) {
                     body.innerHTML += `<button onclick="startAlgo('${id}')" class="w-full p-6 bg-blue-600 text-white rounded-3xl font-black mb-3 text-lg flex justify-between items-center btn-action shadow-lg shadow-blue-50 uppercase">
-                        ${id.replace('_basla','').replace('_',' ')} <i class="fa-solid fa-chevron-right opacity-50"></i>
+                        ${id.replace('_basla','').replace('_',' ')} <i class="fa-solid fa-chevron-right opacity-40"></i>
                     </button>`;
                 }
             });
@@ -217,14 +215,43 @@
             if(!s) return;
             const body = document.getElementById('algo-body');
             let text = s.soru;
-            if(patientWeight) text = text.replace(/{([\d.]+)}/g, (m, p1) => `<span class="text-red-600 font-black underline">${(parseFloat(p1) * patientWeight).toFixed(2)}</span>`);
+
+            // TEMA BELİRLEME
+            let cardColor = "bg-gray-50";
+            let textColor = "text-gray-800";
+            let icon = "";
+
+            if(text.includes("[ONAY]")) {
+                cardColor = "bg-emerald-50"; textColor = "text-emerald-900";
+                icon = '<i class="fa-solid fa-phone-volume text-emerald-500 text-5xl mb-4 block animate-bounce"></i>';
+                text = text.replace("[ONAY]", "");
+            } else if(text.includes("[KRİTİK]")) {
+                cardColor = "bg-red-600"; textColor = "text-white";
+                icon = '<i class="fa-solid fa-biohazard text-white text-5xl mb-4 block"></i>';
+                text = text.replace("[KRİTİK]", "");
+            } else if(text.includes("[UYARI]")) {
+                cardColor = "bg-amber-50"; textColor = "text-amber-900";
+                icon = '<i class="fa-solid fa-circle-exclamation text-amber-500 text-5xl mb-4 block"></i>';
+                text = text.replace("[UYARI]", "");
+            } else if(text.includes("[BİLGİ]")) {
+                icon = '<i class="fa-solid fa-circle-info text-blue-500 text-5xl mb-4 block"></i>';
+                text = text.replace("[BİLGİ]", "");
+            }
+
+            // DOZ HESAPLAMA {0.01}
+            if(patientWeight) {
+                text = text.replace(/{([\d.]+)}/g, (m, p1) => `<span class="bg-white/30 px-2 py-1 rounded font-black border-b-4 border-current">${(parseFloat(p1) * patientWeight).toFixed(2)}</span>`);
+            } else {
+                text = text.replace(/{([\d.]+)}/g, (m, p1) => `<span class="opacity-50 underline">${p1} mg/kg</span>`);
+            }
 
             body.innerHTML = `
-                <div class="algo-card p-8 bg-gray-50 rounded-[2.5rem] mb-8 border border-gray-100">
-                    <p class="text-2xl font-bold text-gray-800 leading-tight">${text}</p>
+                <div class="algo-card p-8 ${cardColor} rounded-[2.5rem] mb-6 border border-black/5 shadow-inner">
+                    ${icon}
+                    <p class="text-2xl font-bold ${textColor} leading-tight">${text}</p>
                 </div>
                 <div class="space-y-3">
-                    ${s.e_metin ? `<button onclick="btnClick('${s.e_hedef}', '${id}')" class="w-full p-6 bg-red-600 text-white rounded-2xl font-black btn-action shadow-xl uppercase">${s.e_metin}</button>` : ''}
+                    ${s.e_metin ? `<button onclick="btnClick('${s.e_hedef}', '${id}')" class="w-full p-6 bg-red-600 text-white rounded-3xl font-black btn-action shadow-xl uppercase text-lg">${s.e_metin}</button>` : ''}
                     ${s.h_metin ? `<button onclick="showStep('${s.h_hedef}')" class="w-full p-6 bg-gray-900 text-white rounded-3xl font-black btn-action uppercase">${s.h_metin}</button>` : ''}
                 </div>
             `;
@@ -232,7 +259,7 @@
         }
 
         function btnClick(target, current) {
-            if(current === 'ana_adrenalin_doz') { adrenalineCount = 1; startTimer(); }
+            if(current === 'ana_adrenalin_doz') { adCount = 1; startTimer(); }
             showStep(target);
         }
 
@@ -244,7 +271,7 @@
             document.getElementById('sonucDeger').innerText = res + " " + (i.birim || 'mg');
             document.getElementById('sonucMetin').innerText = i.ad;
             document.getElementById('sonucPanel').classList.remove('hidden');
-            speak(res + " " + i.birim + " " + i.ad);
+            speak("Sonuç " + res + " " + i.birim);
         }
 
         function tabDegistir(h) {
@@ -252,13 +279,6 @@
             document.getElementById('modul-algo').classList.toggle('hidden', h !== 'algo');
             document.getElementById('nav-doz').classList.toggle('active-tab', h === 'doz');
             document.getElementById('nav-algo').classList.toggle('active-tab', h === 'algo');
-        }
-
-        function speak(t) {
-            window.speechSynthesis.cancel();
-            const m = new SpeechSynthesisUtterance(t);
-            m.lang = 'tr-TR';
-            window.speechSynthesis.speak(m);
         }
 
         window.onload = init;
