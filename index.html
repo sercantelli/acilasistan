@@ -202,30 +202,41 @@
         }
 
         // --- ADIM ADIM MODU ---
-        function showStep(id) {
-            const s = db_algos[id];
-            if(!s) { location.reload(); return; }
-            navHistory.push(id);
-            const body = document.getElementById('algo-body');
-            let txt = getCalculatedText(s.soru);
-            let theme = { bg: "bg-gray-50", text: "text-gray-800", icon: "" };
-            
-            if(txt.includes("[ONAY]")) theme = { bg: "bg-emerald-50", text: "text-emerald-900", icon: '<i class="fa-solid fa-phone-volume text-emerald-500 text-5xl mb-4 animate-bounce"></i>' };
-            else if(txt.includes("[UYARI]")) theme = { bg: "bg-amber-50", text: "text-amber-900", icon: '<i class="fa-solid fa-triangle-exclamation text-amber-500 text-5xl mb-4"></i>' };
-            else if(txt.includes("[KRİTİK]")) theme = { bg: "bg-red-600", text: "text-white", icon: '<i class="fa-solid fa-biohazard text-white text-5xl mb-4"></i>' };
+       function showStep(id) {
+    const s = db_algos[id];
+    if(!s) { location.reload(); return; }
+    
+    // Eğer aynı ID zaten geçmişte varsa (döngü), geçmişi temizleme veya kontrol ekleyebilirsin
+    if(navHistory[navHistory.length-1] !== id) navHistory.push(id);
+    
+    const body = document.getElementById('algo-body');
+    let txt = getCalculatedText(s.soru);
 
-            body.innerHTML = `
-                <div class="p-8 ${theme.bg} rounded-[2.5rem] mb-6 shadow-inner border border-black/5">
-                    ${theme.icon}
-                    <p class="text-2xl font-bold ${theme.text} leading-tight">${txt.replace(/\[.*?\]/g, '')}</p>
-                </div>
-                <div class="grid grid-cols-1 gap-4">
-                    ${s.e_metin ? `<button onclick="handleStepClick('${s.e_hedef}', '${id}')" class="w-full p-6 bg-red-600 text-white rounded-3xl font-black btn-action uppercase shadow-xl text-xl">${s.e_metin}</button>` : ''}
-                    ${s.h_metin ? `<button onclick="showStep('${s.h_hedef}')" class="w-full p-6 bg-gray-900 text-white rounded-3xl font-black btn-action text-lg">${s.h_metin}</button>` : ''}
-                </div>
-            `;
-            speak(s.ses || txt.replace(/<[^>]*>?/gm, ''));
-        }
+    // --- OTOMATİK SAYAÇ TETİKLEYİCİ ---
+    // Eğer soruda "(SAYAÇ BAŞLATILDI)" geçiyorsa otomatik sayaç başlat
+    if (txt.includes("(SAYAÇ BAŞLATILDI)")) {
+        // Eğer zaten bu isimde bir sayaç çalışmıyorsa başlat (tekrarı önlemek için)
+        createTimer("Güvenlik Bekleme", 600); // 10 dakikalık bir bekleme süresi
+    }
+
+    let theme = { bg: "bg-gray-50", text: "text-gray-800", icon: "" };
+    
+    if(txt.includes("[ONAY]")) theme = { bg: "bg-emerald-50", text: "text-emerald-900", icon: '<i class="fa-solid fa-phone-volume text-emerald-500 text-5xl mb-4 animate-bounce"></i>' };
+    else if(txt.includes("[UYARI]")) theme = { bg: "bg-amber-50", text: "text-amber-900", icon: '<i class="fa-solid fa-triangle-exclamation text-amber-500 text-5xl mb-4"></i>' };
+    else if(txt.includes("[KRİTİK]")) theme = { bg: "bg-red-600", text: "text-white", icon: '<i class="fa-solid fa-biohazard text-white text-5xl mb-4"></i>' };
+
+    body.innerHTML = `
+        <div class="p-8 ${theme.bg} rounded-[2.5rem] mb-6 shadow-inner border border-black/5">
+            ${theme.icon}
+            <p class="text-2xl font-bold ${theme.text} leading-tight">${txt.replace(/\[.*?\]/g, '')}</p>
+        </div>
+        <div class="grid grid-cols-1 gap-4">
+            ${s.e_metin ? `<button onclick="handleStepClick('${s.e_hedef}', '${id}')" class="w-full p-6 bg-red-600 text-white rounded-3xl font-black btn-action uppercase shadow-xl text-xl">${s.e_metin}</button>` : ''}
+            ${s.h_metin ? `<button onclick="handleStepClick('${s.h_hedef}', '${id}')" class="w-full p-6 bg-gray-900 text-white rounded-3xl font-black btn-action text-lg">${s.h_metin}</button>` : ''}
+        </div>
+    `;
+    speak(s.ses || txt.replace(/<[^>]*>?/gm, ''));
+}
 
         // --- SAYAÇ SİSTEMİ ---
         function createTimer(label, seconds) {
@@ -333,9 +344,12 @@
             overlay.style.display = 'flex';
         }
         function handleStepClick(target, current) {
-            if(current.includes('adrenalin')) createTimer("Adrenalin", 300);
-            showStep(target);
-        }
+    // Adrenalin kontrolü (Eski mantık devam etsin)
+    if(current.includes('adrenalin')) createTimer("Adrenalin", 300);
+    
+    // Yeni adıma geç
+    showStep(target);
+}
         function goBack() { if(navHistory.length > 1) { navHistory.pop(); showStep(navHistory.pop()); } else { location.reload(); } }
         function tabDegistir(h) {
             document.getElementById('modul-doz').classList.toggle('hidden', h !== 'doz');
