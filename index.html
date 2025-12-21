@@ -202,7 +202,7 @@
         }
 
         // --- ADIM ADIM MODU ---
-      function showStep(id) {
+     function showStep(id) {
     const s = db_algos[id];
     if(!s) { location.reload(); return; }
     
@@ -210,45 +210,68 @@
     const body = document.getElementById('algo-body');
     let txt = getCalculatedText(s.soru);
 
-    // --- SONSUZ (İLERİ) SAYAÇ TETİKLEYİCİ ---
-    if (txt.includes("(SAYAÇ BAŞLATILDI)")) {
-        createTimer("GÜVENLİK BEKLEME", null); // null = İleri sayım (Sonsuz)
+    // --- GELİŞMİŞ SAYAÇ YAKALAYICI ---
+    // Metnin içinde (SAYAÇ:300) veya (SAYAÇ:0) gibi ifadeleri arar
+    const timerMatch = txt.match(/\(SAYAÇ:(\d+)\)/);
+    if (timerMatch) {
+        const alertVal = parseInt(timerMatch[1]); // Parantez içindeki rakamı alır
+        const label = id.includes('adrenalin') ? "Adrenalin" : "BEKLEME SÜRESİ";
+        createTimer(label, alertVal);
     }
 
     let theme = { bg: "bg-gray-50", text: "text-gray-800", icon: "" };
-    if(txt.includes("[ONAY]")) theme = { bg: "bg-emerald-50", text: "text-emerald-900", icon: '<i class="fa-solid fa-phone-volume text-emerald-500 text-5xl mb-4 animate-bounce"></i>' };
-    else if(txt.includes("[UYARI]")) theme = { bg: "bg-amber-50", text: "text-amber-900", icon: '<i class="fa-solid fa-triangle-exclamation text-amber-500 text-5xl mb-4"></i>' };
+    if(txt.includes("[ONAY]")) theme = { bg: "bg-emerald-50", text: "text-emerald-900", icon: '<i class="fa-solid fa-phone-volume text-emerald-500 text-5xl mb-4"></i>' };
     else if(txt.includes("[KRİTİK]")) theme = { bg: "bg-red-600", text: "text-white", icon: '<i class="fa-solid fa-biohazard text-white text-5xl mb-4"></i>' };
+
+    // --- YEŞİL BUTON VE DİĞERLERİ ---
+    const eBtnClass = s.e_metin === "GÜVENLİK SAĞLANDI" ? "bg-emerald-600 shadow-emerald-200" : "bg-red-600 shadow-red-200";
 
     body.innerHTML = `
         <div class="p-8 ${theme.bg} rounded-[2.5rem] mb-6 shadow-inner border border-black/5">
             ${theme.icon}
-            <p class="text-2xl font-bold ${theme.text} leading-tight">${txt.replace(/\[.*?\]/g, '')}</p>
+            <p class="text-2xl font-bold ${theme.text} leading-tight">${txt.replace(/\[.*?\]/g, '').replace(/\(SAYAÇ:\d+\)/g, '')}</p>
         </div>
         <div class="grid grid-cols-1 gap-4">
-            ${s.e_metin ? `<button onclick="handleStepClick('${s.e_hedef}', '${id}')" class="w-full p-6 bg-red-600 text-white rounded-3xl font-black btn-action uppercase shadow-xl text-xl">${s.e_metin}</button>` : ''}
+            ${s.e_metin ? `<button onclick="handleStepClick('${s.e_hedef}', '${id}')" class="w-full p-6 ${eBtnClass} text-white rounded-3xl font-black btn-action uppercase shadow-xl text-xl">${s.e_metin}</button>` : ''}
             ${s.h_metin ? `<button onclick="handleStepClick('${s.h_hedef}', '${id}')" class="w-full p-6 bg-gray-900 text-white rounded-3xl font-black btn-action text-lg">${s.h_metin}</button>` : ''}
         </div>
     `;
-    speak(s.ses || txt.replace(/<[^>]*>?/gm, ''));
+    speak(s.ses || txt.replace(/<[^>]*>?/gm, '').replace(/\(SAYAÇ:\d+\)/g, ''));
 }
-
         // --- SAYAÇ SİSTEMİ ---
-        function createTimer(label, seconds) {
-            const tid = `timer-${Date.now()}`;
-            const el = document.createElement('div');
-            el.className = `timer-card bg-red-600 p-5 rounded-3xl text-white flex justify-between items-center shadow-xl`;
-            el.id = tid;
-            el.innerHTML = `<div><p class="text-[9px] font-black uppercase opacity-70">${label}</p><h4 class="text-3xl font-black clock tracking-tighter">--:--</h4></div><button onclick="this.parentElement.remove()" class="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl"><i class="fa-solid fa-xmark"></i></button>`;
-            document.getElementById('timer-stack').prepend(el);
-            let t = seconds;
-            activeTimers[tid] = setInterval(() => {
-                let m = parseInt(t/60,10), s = parseInt(t%60,10);
-                el.querySelector('.clock').innerText = (m<10?"0"+m:m) + ":" + (s<10?"0"+s:s);
-                if(--t < 0) { clearInterval(activeTimers[tid]); speak(`${label} süresi doldu.`); el.classList.add('animate-pulse', 'ring-4', 'ring-white'); }
-            }, 1000);
-        }
+        function createTimer(label, alertSecond) {
+    const tid = `timer-${Date.now()}`;
+    const el = document.createElement('div');
+    el.className = `timer-card bg-slate-800 p-5 rounded-3xl text-white flex justify-between items-center shadow-xl border-l-8 border-blue-500`;
+    el.id = tid;
+    
+    el.innerHTML = `
+        <div>
+            <p class="text-[9px] font-black uppercase opacity-70">${label}</p>
+            <h4 class="text-3xl font-black clock tracking-tighter">00:00</h4>
+        </div>
+        <button onclick="clearInterval(activeTimers['${tid}']); this.parentElement.remove()" class="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl">
+            <i class="fa-solid fa-xmark"></i>
+        </button>`;
+    
+    document.getElementById('timer-stack').prepend(el);
 
+    let t = 0;
+    activeTimers[tid] = setInterval(() => {
+        t++;
+        let m = parseInt(t / 60, 10);
+        let s = parseInt(t % 60, 10);
+        el.querySelector('.clock').innerText = (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+
+        // --- DİNAMİK UYARI KONTROLÜ ---
+        // Eğer alertSecond bir rakamsa (Örn: 120 veya 300) o saniyede uyarır
+        if (alertSecond > 0 && t === parseInt(alertSecond)) {
+            el.classList.replace('bg-slate-800', 'bg-red-600');
+            el.classList.add('animate-pulse', 'ring-4', 'ring-white');
+            speak(`${label} için belirlenen ${parseInt(alertSecond/60)} dakikalık süre doldu.`);
+        }
+    }, 1000);
+}
         // --- GİRİŞ VE MODAL YÖNETİMİ ---
         function askWeight(id) {
             selectedAlgoId = id;
