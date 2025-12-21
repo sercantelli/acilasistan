@@ -3,22 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ACİL ASİSTAN PRO | MARDİN 112</title>
+    <title>MARDİN 112 | AKILLI KLİNİK ASİSTAN</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+        .active-tab { color: #ef4444; border-top: 4px solid #ef4444; }
         .btn-action { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .btn-action:active { transform: scale(0.95); }
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); z-index: 200; align-items: center; justify-content: center; padding: 1.5rem; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); z-index: 500; align-items: center; justify-content: center; padding: 1.5rem; }
         
-        /* Tam Akış Şeması Özel Tasarımı (Senin React Kodun) */
-        .flow-arrow { width: 2px; height: 24px; background: #cbd5e1; margin: 4px auto; position: relative; }
-        .flow-arrow::after { content: '▼'; position: absolute; bottom: -8px; left: -4px; color: #cbd5e1; font-size: 10px; }
+        /* Şema Okları (React Tasarımın) */
+        .flow-arrow { width: 2px; height: 20px; background: #cbd5e1; margin: 4px auto; position: relative; }
+        .flow-arrow::after { content: '▼'; position: absolute; bottom: -8px; left: -4.5px; color: #cbd5e1; font-size: 10px; }
         .info-note { border-left: 4px solid #f59e0b; background: #fffbeb; }
-        .timer-card { animation: slideIn 0.3s ease-out; border-bottom: 5px solid rgba(0,0,0,0.2); }
+        
+        /* AI Paneli */
+        #ai-chat-panel { transform: translateY(100%); transition: transform 0.4s ease-in-out; z-index: 400; }
+        #ai-chat-panel.open { transform: translateY(0); }
+        .chat-bubble { max-width: 85%; border-radius: 1.5rem; padding: 1rem; font-size: 0.85rem; margin-bottom: 0.5rem; }
+        .bot-msg { background: #f1f5f9; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 0.2rem; }
+        .user-msg { background: #ef4444; color: white; align-self: flex-end; border-bottom-right-radius: 0.2rem; }
+        
+        /* Sayaç Kartı */
+        .timer-card { animation: slideIn 0.3s ease-out; border-bottom: 5px solid rgba(0,0,0,0.1); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .voice-active { animation: pulseGreen 1.5s infinite; }
+        @keyframes pulseGreen { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
     </style>
 </head>
 <body class="pb-32">
@@ -33,11 +45,14 @@
     </div>
 
     <header class="bg-white sticky top-0 z-50 border-b p-4 shadow-sm flex justify-between items-center">
-        <div>
-            <h1 class="font-black text-xl tracking-tighter text-gray-900 leading-none">ACİL<span class="text-red-600">ASİSTAN</span></h1>
-            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Hibrit Karar Destek</p>
+        <div onclick="location.reload()" class="cursor-pointer">
+            <h1 class="font-black text-xl tracking-tighter text-gray-900 leading-none">MARDİN<span class="text-red-600">112</span></h1>
+            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Akıllı Karar Destek</p>
         </div>
-        <div id="weight-tag" class="hidden bg-red-50 text-red-600 px-3 py-1.5 rounded-xl text-xs font-black border border-red-100 uppercase tracking-tighter">-- KG</div>
+        <div class="flex items-center gap-2">
+            <div id="voice-indicator" class="hidden h-3 w-3 rounded-full bg-green-500 voice-active"></div>
+            <div id="weight-tag" class="hidden bg-red-50 text-red-600 px-3 py-1.5 rounded-xl text-xs font-black border border-red-100 uppercase tracking-tighter">-- KG</div>
+        </div>
     </header>
 
     <div id="fixed-timers" class="p-4 space-y-2 sticky top-[73px] z-40 bg-f1f5f9/90 backdrop-blur-sm">
@@ -51,7 +66,7 @@
                 <label class="text-[10px] font-black text-gray-400 uppercase ml-2">Hızlı Doz Sorgula</label>
                 <input type="number" id="kiloInput" placeholder="Kilo (kg)" class="w-full bg-gray-50 rounded-2xl p-6 text-4xl font-black mt-1 mb-4 outline-none border-2 border-transparent focus:border-red-100">
                 <select id="ilacSelect" class="w-full bg-gray-50 rounded-2xl p-5 text-lg font-bold mb-6 outline-none appearance-none border-2 border-transparent"></select>
-                <button onclick="hesapla()" class="w-full bg-red-600 text-white font-black py-5 rounded-3xl text-xl shadow-lg btn-action uppercase">Doz Hesapla</button>
+                <button onclick="hesapla()" class="w-full bg-red-600 text-white font-black py-5 rounded-3xl text-xl shadow-lg btn-action uppercase tracking-tight">Hesapla</button>
                 <div id="sonucPanel" class="hidden mt-6 bg-gray-900 rounded-[2rem] p-8 text-center text-white">
                     <h3 id="sonucDeger" class="text-5xl font-black mb-1">--</h3>
                     <p id="sonucMetin" class="text-[10px] font-bold text-red-400 uppercase"></p>
@@ -80,28 +95,48 @@
                 </div>
 
                 <div id="mode-step-by-step" class="hidden">
-                    <div class="bg-white rounded-[3rem] p-6 border shadow-sm min-h-[400px] flex flex-col justify-center text-center space-y-6">
-                        <div id="algo-body" class="space-y-4"></div>
-                    </div>
+                    <div id="algo-body" class="bg-white rounded-[3rem] p-6 border shadow-sm min-h-[400px] flex flex-col justify-center text-center space-y-6"></div>
                 </div>
 
-                <div id="mode-full-flow" class="hidden space-y-1">
-                    </div>
+                <div id="mode-full-flow" class="hidden space-y-1"></div>
             </div>
         </section>
 
     </main>
 
+    <button onclick="toggleAIChat()" class="fixed bottom-24 right-6 h-16 w-16 bg-gray-900 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-[400] btn-action border-4 border-white">
+        <i class="fa-solid fa-robot"></i>
+    </button>
+
+    <div id="ai-chat-panel" class="fixed inset-x-0 bottom-0 top-20 bg-white rounded-t-[3rem] shadow-2xl flex flex-col p-6 border-t">
+        <div class="flex justify-between items-center mb-4">
+            <div>
+                <h3 class="font-black text-xl text-gray-900">Protokol Asistanı</h3>
+                <div class="flex gap-2 mt-1">
+                    <span id="ai-mode-tag" class="text-[9px] font-black px-3 py-1 bg-blue-600 text-white rounded-full uppercase">Bilgi Bankası</span>
+                </div>
+            </div>
+            <button onclick="toggleAIChat()" class="h-10 w-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="chat-messages" class="flex-grow overflow-y-auto flex flex-col gap-2 p-2">
+            <div class="chat-bubble bot-msg">Merhaba! Ben Mardin 112 AI asistanıyım. Algoritma kitabındaki tüm verilere hakimim. Bana her şeyi sorabilirsiniz.</div>
+        </div>
+        <div class="mt-4 flex gap-2">
+            <input type="text" id="chatInput" placeholder="Mesajınızı yazın..." class="flex-grow bg-gray-50 border-none rounded-2xl p-4 font-medium outline-none">
+            <button onclick="sendToAI()" class="h-14 w-14 bg-red-600 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
     <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t p-4 flex justify-around z-50">
-        <button onclick="tabDegistir('doz')" id="nav-doz" class="flex flex-col items-center gap-1 active-tab transition-all">
+        <button onclick="tabDegistir('doz')" id="nav-doz" class="flex flex-col items-center gap-1 active-tab">
             <i class="fa-solid fa-calculator text-2xl"></i><span class="text-[10px] font-black uppercase">Doz</span>
         </button>
-        <button onclick="tabDegistir('algo')" id="nav-algo" class="flex flex-col items-center gap-1 text-gray-300 transition-all">
-            <i class="fa-solid fa-diagram-project text-2xl"></i><span class="text-[10px] font-black uppercase tracking-tighter">Algoritmalar</span>
+        <button onclick="tabDegistir('algo')" id="nav-algo" class="flex flex-col items-center gap-1 text-gray-300">
+            <i class="fa-solid fa-diagram-project text-2xl"></i><span class="text-[10px] font-black uppercase">Algoritmalar</span>
         </button>
         <div class="w-16"></div>
         <button onclick="location.reload()" class="flex flex-col items-center gap-1 text-gray-300">
-            <i class="fa-solid fa-power-off text-2xl"></i><span class="text-[10px] font-black uppercase tracking-tighter">Bitir</span>
+            <i class="fa-solid fa-power-off text-2xl"></i><span class="text-[10px] font-black uppercase">Bitir</span>
         </button>
     </nav>
 
@@ -110,40 +145,114 @@
         const URL_ALGO = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQxXvPBsPF_TiInlZaVjrSo1DcHLaq4TyyMEnXybkfqgdUBRofs2h4fqVSKDRHkKeG6JBgLdbEA55bM/pub?gid=0&single=true&output=csv';
         
         let db_drugs = [], db_algos = {}, navHistory = [], activeTimers = {};
-        let patientWeight = null;
-        let selectedAlgoId = null;
-        let ageGroup = 'under12';
+        let patientWeight = null, ageGroup = 'under12', selectedAlgoId = null;
 
-        // --- GİRİŞ MODALLARI ---
-        function showModal(config) {
-            const overlay = document.getElementById('global-modal');
-            const btns = document.getElementById('modal-buttons');
-            document.getElementById('modal-icon-area').className = `w-16 h-16 rounded-full flex items-center justify-center mx-auto text-2xl ${config.iconBg} ${config.iconColor}`;
-            document.getElementById('modal-icon-area').innerHTML = `<i class="fa-solid ${config.icon}"></i>`;
-            document.getElementById('modal-title').innerText = config.title;
-            document.getElementById('modal-content').innerHTML = config.content || '';
-            btns.innerHTML = '';
-            config.buttons.forEach(b => {
-                const btn = document.createElement('button');
-                btn.className = `p-5 rounded-2xl font-black btn-action uppercase text-[11px] shadow-sm ${b.class}`;
-                btn.innerText = b.text;
-                btn.onclick = () => { b.action(); if(!b.keepOpen) overlay.style.display = 'none'; };
-                btns.appendChild(btn);
+        // --- DOZ HESAPLAMA MOTORU ---
+        function getCalculatedText(rawText) {
+            if(!patientWeight) return rawText.replace(/{([\d.]+)}/g, "$1 mg/kg");
+            return rawText.replace(/{([\d.]+)}/g, (m, p1) => {
+                let val = parseFloat(p1) * patientWeight;
+                // Adrenalin Max Doz Kontrolü (React kodundaki mantık)
+                if(p1 === "0.01") {
+                    const max = ageGroup === 'under12' ? 0.3 : 0.5;
+                    val = Math.min(val, max);
+                }
+                return `<span class="bg-white/40 px-2 rounded font-black border-b-2 border-current">${val.toFixed(2)}</span>`;
             });
-            overlay.style.display = 'flex';
         }
 
+        // --- TAM ŞEMA JENERATÖRÜ (Otomatik) ---
+        function generateFullFlow(startId) {
+            const container = document.getElementById('mode-full-flow');
+            container.innerHTML = '';
+            let currentId = startId;
+            let visited = new Set();
+            let flowHtml = '';
+
+            while(currentId && db_algos[currentId] && !visited.has(currentId)) {
+                visited.add(currentId);
+                const step = db_algos[currentId];
+                const cleanTxt = getCalculatedText(step.soru);
+                
+                let cardClass = "bg-white border border-slate-200 text-slate-800";
+                let icon = '<i class="fa-solid fa-chevron-right text-blue-500 opacity-30"></i>';
+
+                if(step.soru.includes("[KRİTİK]")) { cardClass = "bg-red-600 text-white shadow-lg ring-4 ring-red-100"; icon = '<i class="fa-solid fa-triangle-exclamation"></i>'; }
+                else if(step.soru.includes("[UYARI]")) { cardClass = "bg-amber-50 text-amber-900 border-2 border-amber-100"; icon = '<i class="fa-solid fa-circle-exclamation"></i>'; }
+                else if(step.soru.includes("[BİLGİ]")) { cardClass = "bg-slate-800 text-white"; icon = '<i class="fa-solid fa-info-circle opacity-50"></i>'; }
+                else if(step.soru.includes("[ONAY]")) { cardClass = "bg-emerald-600 text-white"; icon = '<i class="fa-solid fa-phone"></i>'; }
+
+                flowHtml += `
+                    <div class="p-5 rounded-[2rem] ${cardClass} relative overflow-hidden transition-all">
+                        <div class="flex items-start gap-3">
+                            <div class="mt-1">${icon}</div>
+                            <div class="text-sm font-bold leading-tight">${cleanTxt.replace(/\[.*?\]/g, '')}</div>
+                        </div>
+                        ${currentId.includes('adrenalin') ? `<button onclick="createTimer('Adrenalin', 300)" class="mt-3 w-full bg-black/10 py-2 rounded-xl text-[9px] font-black uppercase border border-white/20">SAYACI BAŞLAT</button>` : ''}
+                    </div>
+                `;
+
+                if(step.e_hedef && db_algos[step.e_hedef]) {
+                    flowHtml += '<div class="flow-arrow"></div>';
+                    currentId = step.e_hedef;
+                } else { currentId = null; }
+            }
+            container.innerHTML = flowHtml;
+            speak("Tam akış şeması oluşturuldu.");
+        }
+
+        // --- ADIM ADIM MODU ---
+        function showStep(id) {
+            const s = db_algos[id];
+            if(!s) { location.reload(); return; }
+            navHistory.push(id);
+            const body = document.getElementById('algo-body');
+            let txt = getCalculatedText(s.soru);
+            let theme = { bg: "bg-gray-50", text: "text-gray-800", icon: "" };
+            
+            if(txt.includes("[ONAY]")) theme = { bg: "bg-emerald-50", text: "text-emerald-900", icon: '<i class="fa-solid fa-phone-volume text-emerald-500 text-5xl mb-4 animate-bounce"></i>' };
+            else if(txt.includes("[UYARI]")) theme = { bg: "bg-amber-50", text: "text-amber-900", icon: '<i class="fa-solid fa-triangle-exclamation text-amber-500 text-5xl mb-4"></i>' };
+            else if(txt.includes("[KRİTİK]")) theme = { bg: "bg-red-600", text: "text-white", icon: '<i class="fa-solid fa-biohazard text-white text-5xl mb-4"></i>' };
+
+            body.innerHTML = `
+                <div class="p-8 ${theme.bg} rounded-[2.5rem] mb-6 shadow-inner border border-black/5">
+                    ${theme.icon}
+                    <p class="text-2xl font-bold ${theme.text} leading-tight">${txt.replace(/\[.*?\]/g, '')}</p>
+                </div>
+                <div class="grid grid-cols-1 gap-4">
+                    ${s.e_metin ? `<button onclick="handleStepClick('${s.e_hedef}', '${id}')" class="w-full p-6 bg-red-600 text-white rounded-3xl font-black btn-action uppercase shadow-xl text-xl">${s.e_metin}</button>` : ''}
+                    ${s.h_metin ? `<button onclick="showStep('${s.h_hedef}')" class="w-full p-6 bg-gray-900 text-white rounded-3xl font-black btn-action text-lg">${s.h_metin}</button>` : ''}
+                </div>
+            `;
+            speak(s.ses || txt.replace(/<[^>]*>?/gm, ''));
+        }
+
+        // --- SAYAÇ SİSTEMİ ---
+        function createTimer(label, seconds) {
+            const tid = `timer-${Date.now()}`;
+            const el = document.createElement('div');
+            el.className = `timer-card bg-red-600 p-5 rounded-3xl text-white flex justify-between items-center shadow-xl`;
+            el.id = tid;
+            el.innerHTML = `<div><p class="text-[9px] font-black uppercase opacity-70">${label}</p><h4 class="text-3xl font-black clock tracking-tighter">--:--</h4></div><button onclick="this.parentElement.remove()" class="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl"><i class="fa-solid fa-xmark"></i></button>`;
+            document.getElementById('timer-stack').prepend(el);
+            let t = seconds;
+            activeTimers[tid] = setInterval(() => {
+                let m = parseInt(t/60,10), s = parseInt(t%60,10);
+                el.querySelector('.clock').innerText = (m<10?"0"+m:m) + ":" + (s<10?"0"+s:s);
+                if(--t < 0) { clearInterval(activeTimers[tid]); speak(`${label} süresi doldu.`); el.classList.add('animate-pulse', 'ring-4', 'ring-white'); }
+            }, 1000);
+        }
+
+        // --- GİRİŞ VE MODAL YÖNETİMİ ---
         function askWeight(id) {
             selectedAlgoId = id;
             showModal({
-                title: 'HASTA BİLGİSİ', borderColor: 'border-blue-600',
-                icon: 'fa-weight-scale', iconBg: 'bg-blue-100', iconColor: 'text-blue-600',
+                title: 'HASTA BİLGİSİ', icon: 'fa-weight-scale', iconBg: 'bg-blue-100', iconColor: 'text-blue-600',
                 content: `
-                    <p class="text-[10px] mb-2 uppercase font-bold text-gray-400 text-center">Kilo (kg) ve Yaş Grubu</p>
-                    <input type="number" id="modalKiloInput" placeholder="0" class="w-full bg-gray-50 rounded-2xl p-5 text-center text-4xl font-black outline-none border-2 border-blue-100 mb-4">
+                    <input type="number" id="modalKiloInput" placeholder="Kilo (kg)" class="w-full bg-gray-50 rounded-2xl p-5 text-center text-4xl font-black outline-none border-2 border-blue-100 mb-4">
                     <div class="flex p-1 bg-slate-100 rounded-2xl">
-                        <button id="btnAgeU" onclick="ageGroup='under12'; document.getElementById('btnAgeU').classList.add('bg-white','text-red-600'); document.getElementById('btnAgeO').classList.remove('bg-white','text-red-600');" class="flex-1 py-3 rounded-xl font-bold text-[10px] bg-white text-red-600 shadow-sm">&lt; 12 YAŞ</button>
-                        <button id="btnAgeO" onclick="ageGroup='over12'; document.getElementById('btnAgeO').classList.add('bg-white','text-red-600'); document.getElementById('btnAgeU').classList.remove('bg-white','text-red-600');" class="flex-1 py-3 rounded-xl font-bold text-[10px] text-slate-500">&ge; 12 YAŞ</button>
+                        <button id="btnAgeU" onclick="ageGroup='under12'; this.classList.add('bg-white','text-red-600'); document.getElementById('btnAgeO').classList.remove('bg-white','text-red-600');" class="flex-1 py-3 rounded-xl font-bold text-[10px] bg-white text-red-600 shadow-sm">&lt; 12 YAŞ</button>
+                        <button id="btnAgeO" onclick="ageGroup='over12'; this.classList.add('bg-white','text-red-600'); document.getElementById('btnAgeU').classList.remove('bg-white','text-red-600');" class="flex-1 py-3 rounded-xl font-bold text-[10px] text-slate-500">&ge; 12 YAŞ</button>
                     </div>
                 `,
                 buttons: [
@@ -162,17 +271,16 @@
 
         function askViewMode() {
             showModal({
-                title: 'GÖRÜNÜM SEÇİN', borderColor: 'border-red-600',
-                icon: 'fa-eye', iconBg: 'bg-red-100', iconColor: 'text-red-600',
-                content: 'Algoritmayı nasıl yönetmek istersiniz?',
+                title: 'GÖRÜNÜM SEÇİN', icon: 'fa-eye', iconBg: 'bg-red-100', iconColor: 'text-red-600',
+                content: 'Uygulama modunu seçiniz.',
                 buttons: [
-                    { text: 'ADIM ADIM KILAVUZ (İnteraktif)', class: 'bg-red-600 text-white', action: () => initAlgo('step') },
-                    { text: 'TAM AKIŞ ŞEMASI (Görsel)', class: 'bg-slate-800 text-white', action: () => initAlgo('flow') }
+                    { text: 'ADIM ADIM (İnteraktif)', class: 'bg-red-600 text-white', action: () => initUI('step') },
+                    { text: 'TAM ŞEMA (Görsel)', class: 'bg-slate-800 text-white', action: () => initUI('flow') }
                 ]
             });
         }
 
-        function initAlgo(mode) {
+        function initUI(mode) {
             document.getElementById('algo-selection-area').classList.add('hidden');
             document.getElementById('algo-display-area').classList.remove('hidden');
             if(mode === 'step') {
@@ -182,160 +290,52 @@
             } else {
                 document.getElementById('mode-step-by-step').classList.add('hidden');
                 document.getElementById('mode-full-flow').classList.remove('hidden');
-                renderFullFlow(selectedAlgoId);
+                generateFullFlow(selectedAlgoId);
             }
         }
 
-        // --- TAM AKIŞ MODU (Senin React Kodunun Birebir Dönüşümü) ---
-        function renderFullFlow(startId) {
-            const container = document.getElementById('mode-full-flow');
-            const w = patientWeight || 0;
-            
-            // React kodundaki doz hesaplama mantığı
-            let adrenalin = (w * 0.01).toFixed(2);
-            const maxAd = ageGroup === 'under12' ? 0.3 : 0.5;
-            if (adrenalin > maxAd) adrenalin = maxAd;
-
-            const doses = {
-                ad: adrenalin,
-                salbu: (w * 0.15).toFixed(1),
-                nacl: (w * 20).toFixed(0),
-                anti: (w * 1).toFixed(1),
-                steroid: `${(w * 1).toFixed(1)} - ${(w * 2).toFixed(1)}`
-            };
-
-            container.innerHTML = `
-                <div class="info-note p-4 rounded-2xl flex gap-3 shadow-sm italic text-[11px] text-amber-900 font-medium">
-                    <i class="fa-solid fa-circle-exclamation text-amber-500 text-lg"></i>
-                    <div>Solunum sıkıntısı varsa <b>SALBUTAMOL ${doses.salbu} mg</b> nebül uygula (20 dk arayla 3 kez).</div>
-                </div>
-                <div class="flow-arrow"></div>
-                
-                <div class="w-full bg-slate-800 text-white rounded-2xl p-4 shadow-md border-l-4 border-slate-400">
-                    <p class="text-[10px] font-black opacity-50 uppercase tracking-widest mb-1">Başlangıç</p>
-                    <h3 class="font-bold text-sm leading-tight">Acil olgu yönetimi uygula, mümkünse alerjeni uzaklaştır.</h3>
-                </div>
-                <div class="flow-arrow"></div>
-
-                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center gap-3">
-                    <div class="bg-blue-50 text-blue-600 p-2 rounded-lg"><i class="fa-solid fa-check-circle"></i></div>
-                    <h3 class="font-black text-slate-800 text-sm">Hava yolu açıklığını sağla</h3>
-                </div>
-                <div class="flow-arrow"></div>
-
-                <div class="bg-red-600 text-white rounded-[2rem] p-6 shadow-xl relative overflow-hidden ring-4 ring-red-100">
-                    <p class="text-[10px] font-black uppercase opacity-70 mb-2">Tanı Konulduğu Anda</p>
-                    <div class="flex justify-between items-end">
-                        <div>
-                            <h2 class="text-3xl font-black">ADRENALİN</h2>
-                            <p class="text-[10px] font-bold uppercase">1:1000 İM (0.01 mg/kg)</p>
-                        </div>
-                        <div class="bg-white text-red-600 px-5 py-3 rounded-2xl text-center shadow-lg">
-                            <span class="block text-[10px] font-black opacity-60">DOZ</span>
-                            <span class="text-3xl font-black">${doses.ad}</span><span class="text-sm font-bold ml-1">ml</span>
-                        </div>
-                    </div>
-                    <button onclick="createTimer('Adrenalin', 300)" class="mt-4 w-full bg-black/20 py-3 rounded-xl text-[10px] font-black uppercase border border-white/20">Sayacı Başlat (5 dk)</button>
-                </div>
-                <div class="flow-arrow"></div>
-
-                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center gap-3">
-                    <div class="bg-indigo-50 text-indigo-600 p-2 rounded-lg"><i class="fa-solid fa-heart-pulse"></i></div>
-                    <h3 class="font-bold text-slate-800 text-sm">Monitörize et, damar yolu aç</h3>
-                </div>
-                <div class="flow-arrow"></div>
-
-                <div class="bg-amber-100 border-2 border-amber-200 rounded-2xl p-4 shadow-sm">
-                    <h4 class="text-amber-800 font-black text-xs uppercase mb-2">Hipotansiyon Varsa:</h4>
-                    <div class="flex justify-between items-center bg-white p-3 rounded-xl shadow-inner">
-                        <span class="text-xs font-bold text-amber-900">% 0.9 NaCl Bolus</span>
-                        <span class="text-xl font-black text-amber-700">${doses.nacl} ml</span>
-                    </div>
-                </div>
-                <div class="flow-arrow"></div>
-
-                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
-                    <div class="flex items-center gap-2 font-bold text-sm text-slate-700">
-                        <i class="fa-solid fa-vial text-blue-500"></i> Antihistaminik Uygula
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 text-center">
-                        <div class="bg-slate-50 p-2 rounded-xl border"><p class="text-[9px] font-bold text-slate-400">Difenhidramin</p><p class="text-sm font-black">${doses.anti} mg</p></div>
-                        <div class="bg-slate-50 p-2 rounded-xl border"><p class="text-[9px] font-bold text-slate-400">Ranitidin</p><p class="text-sm font-black">${doses.anti} mg</p></div>
-                    </div>
-                </div>
-                <div class="flow-arrow"></div>
-
-                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-                    <div class="flex items-center gap-3 font-bold text-sm text-slate-700 mb-2">
-                        <i class="fa-solid fa-stethoscope text-purple-500"></i> Geç Reaksiyon Önleme
-                    </div>
-                    <div class="flex justify-between items-center bg-purple-50 p-3 rounded-xl border border-purple-100">
-                        <span class="text-xs font-bold text-purple-900 leading-none">METİLPREDNİZOLON<br><small class="text-[8px] uppercase">IV/IM</small></span>
-                        <span class="text-lg font-black text-purple-800">${doses.steroid} mg</span>
-                    </div>
-                </div>
-
-                <div class="mt-8 p-5 bg-red-50 rounded-2xl border-2 border-red-200">
-                    <div class="flex items-center gap-2 text-red-700 font-black text-xs uppercase mb-2">
-                        <i class="fa-solid fa-circle-info"></i> Önemli Bilgi Notu
-                    </div>
-                    <p class="text-[11px] text-red-900 font-medium leading-relaxed italic">
-                        İlk doz adrenaline yanıt yoksa adrenalin <b>beş dakikada bir</b> aynı dozda toplam üç kez tekrarlanabilir.
-                    </p>
-                </div>
-            `;
-            speak("Tam şema ve hesaplanmış dozlar hazır.");
+        // --- AI ASİSTAN SİSTEMİ ---
+        function toggleAIChat() { document.getElementById('ai-chat-panel').classList.toggle('open'); }
+        async function sendToAI() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            if(!msg) return;
+            addMessage(msg, 'user');
+            input.value = '';
+            // RAG Altyapısı: Burada API ile PDF taranır
+            setTimeout(() => addMessage("Gemini API üzerinden PDF taranıyor... (API anahtarı girildiğinde sonuç dönecektir)", 'bot'), 600);
         }
-
-        // --- ADIM ADIM MODU (Mevcut Sistem) ---
-        function showStep(id) {
-            const s = db_algos[id];
-            if(!s) { location.reload(); return; }
-            navHistory.push(id);
-            const body = document.getElementById('algo-body');
-            let txt = s.soru;
-            let theme = { bg: "bg-gray-50", text: "text-gray-800", icon: "" };
-            
-            if(txt.includes("[ONAY]")) theme = { bg: "bg-emerald-50", text: "text-emerald-900", icon: '<i class="fa-solid fa-phone-volume text-emerald-500 text-5xl mb-4 animate-bounce"></i>' };
-            else if(txt.includes("[UYARI]")) theme = { bg: "bg-amber-50", text: "text-amber-900", icon: '<i class="fa-solid fa-triangle-exclamation text-amber-500 text-5xl mb-4"></i>' };
-            else if(txt.includes("[KRİTİK]")) theme = { bg: "bg-red-600", text: "text-white", icon: '<i class="fa-solid fa-biohazard text-white text-5xl mb-4"></i>' };
-
-            txt = txt.replace(/\[.*?\]/g, '');
-            if(patientWeight) txt = txt.replace(/{([\d.]+)}/g, (m, p1) => `<span class="bg-white/30 px-2 rounded font-black border-b-4 border-current">${(parseFloat(p1) * patientWeight).toFixed(2)}</span>`);
-
-            body.innerHTML = `
-                <div class="p-8 ${theme.bg} rounded-[2.5rem] mb-6 shadow-inner border border-black/5">
-                    ${theme.icon}
-                    <p class="text-2xl font-bold ${theme.text} leading-tight">${txt}</p>
-                </div>
-                <div class="grid grid-cols-1 gap-4">
-                    ${s.e_metin ? `<button onclick="handleStepClick('${s.e_hedef}', '${id}')" class="w-full p-6 bg-red-600 text-white rounded-3xl font-black btn-action shadow-xl text-lg">${s.e_metin}</button>` : ''}
-                    ${s.h_metin ? `<button onclick="showStep('${s.h_hedef}')" class="w-full p-6 bg-gray-900 text-white rounded-3xl font-black btn-action text-lg">${s.h_metin}</button>` : ''}
-                </div>
-            `;
-            speak(s.ses || txt.replace(/<[^>]*>?/gm, ''));
+        function addMessage(text, side) {
+            const container = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = `chat-bubble ${side === 'user' ? 'user-msg' : 'bot-msg'}`;
+            div.innerText = text;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
         }
 
         // --- DİĞER FONKSİYONLAR ---
-        function createTimer(label, seconds, color = "bg-red-600") {
-            const tid = `timer-${Date.now()}`;
-            const el = document.createElement('div');
-            el.className = `timer-card ${color} p-5 rounded-3xl text-white flex justify-between items-center shadow-xl`;
-            el.innerHTML = `<div><p class="text-[9px] font-black uppercase opacity-70 tracking-widest">${label}</p><h4 class="text-3xl font-black clock">--:--</h4></div><button onclick="this.parentElement.remove()" class="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>`;
-            document.getElementById('timer-stack').prepend(el);
-            let t = seconds;
-            activeTimers[tid] = setInterval(() => {
-                let m = parseInt(t/60,10), s = parseInt(t%60,10);
-                el.querySelector('.clock').innerText = (m<10?"0"+m:m) + ":" + (s<10?"0"+s:s);
-                if(--t < 0) { clearInterval(activeTimers[tid]); speak(`${label} süresi doldu.`); el.classList.add('animate-pulse', 'ring-4', 'ring-white'); }
-            }, 1000);
+        function showModal(config) {
+            const overlay = document.getElementById('global-modal');
+            const btns = document.getElementById('modal-buttons');
+            document.getElementById('modal-icon-area').className = `w-16 h-16 rounded-full flex items-center justify-center mx-auto text-2xl ${config.iconBg} ${config.iconColor}`;
+            document.getElementById('modal-icon-area').innerHTML = `<i class="fa-solid ${config.icon}"></i>`;
+            document.getElementById('modal-title').innerText = config.title;
+            document.getElementById('modal-content').innerHTML = config.content || '';
+            btns.innerHTML = '';
+            config.buttons.forEach(b => {
+                const btn = document.createElement('button');
+                btn.className = `p-5 rounded-2xl font-black btn-action uppercase text-[11px] shadow-sm ${b.class}`;
+                btn.innerText = b.text;
+                btn.onclick = () => { b.action(); if(!b.keepOpen) overlay.style.display = 'none'; };
+                btns.appendChild(btn);
+            });
+            overlay.style.display = 'flex';
         }
-
         function handleStepClick(target, current) {
-            if(current.includes('adrenalin_doz')) createTimer("Adrenalin", 300);
+            if(current.includes('adrenalin')) createTimer("Adrenalin", 300);
             showStep(target);
         }
-
         function goBack() { if(navHistory.length > 1) { navHistory.pop(); showStep(navHistory.pop()); } else { location.reload(); } }
         function tabDegistir(h) {
             document.getElementById('modul-doz').classList.toggle('hidden', h !== 'doz');
@@ -353,7 +353,6 @@
             for (let c of line) { if (c === '"') quote = !quote; else if (c === ',' && !quote) { arr.push(col.trim()); col = ''; } else col += c; }
             arr.push(col.trim()); return arr;
         }
-
         async function init() {
             try {
                 const rI = await fetch(URL_ILAC); const tI = await rI.text();
@@ -364,11 +363,10 @@
                 const list = document.getElementById('algo-list');
                 Object.keys(db_algos).forEach(id => { if(id.endsWith('_basla')) {
                     let clean = id.replace('_basla','').replace(/_/g,' ').toUpperCase();
-                    list.innerHTML += `<button onclick="askWeight('${id}')" class="w-full p-6 bg-white border border-gray-100 rounded-3xl font-bold flex justify-between items-center shadow-sm mb-2 text-left"><span>${clean}</span> <i class="fa-solid fa-chevron-right text-blue-600 opacity-20"></i></button>`;
+                    list.innerHTML += `<button onclick="askWeight('${id}')" class="w-full p-6 bg-white border border-gray-100 rounded-3xl font-bold flex justify-between items-center btn-action shadow-sm mb-2 text-left text-sm"><span>${clean}</span> <i class="fa-solid fa-chevron-right text-blue-600 opacity-20"></i></button>`;
                 }});
             } catch(e) { console.error(e); }
         }
-
         function hesapla() {
             const k = document.getElementById('kiloInput').value;
             const i = db_drugs[document.getElementById('ilacSelect').value];
@@ -379,9 +377,9 @@
             document.getElementById('sonucPanel').classList.remove('hidden');
             speak("Sonuç " + res + " " + i.birim);
         }
-
         function speak(t) { window.speechSynthesis.cancel(); const m = new SpeechSynthesisUtterance(t); m.lang = 'tr-TR'; window.speechSynthesis.speak(m); }
         window.onload = init;
+        function askArrest() { initUI('step'); showStep('yetiskin_arrest_basla'); }
     </script>
 </body>
 </html>
