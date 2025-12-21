@@ -22,7 +22,7 @@
 <body class="pb-28">
 
     <div id="global-modal" class="modal-overlay">
-        <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl space-y-6 text-center">
+        <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl space-y-6 text-center border-t-8 border-blue-600" id="modal-border">
             <div id="modal-icon-area" class="w-20 h-20 rounded-full flex items-center justify-center mx-auto text-3xl"></div>
             <h3 id="modal-title" class="text-2xl font-black text-gray-900 leading-tight"></h3>
             <div id="modal-content" class="text-gray-500 font-medium"></div>
@@ -31,14 +31,9 @@
     </div>
 
     <header class="bg-white sticky top-0 z-50 border-b p-4 shadow-sm flex justify-between items-center">
-        <div class="flex items-center gap-3">
-            <button onclick="goBack()" id="back-btn" class="hidden h-10 w-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 border border-gray-100">
-                <i class="fa-solid fa-chevron-left"></i>
-            </button>
-            <div>
-                <h1 class="font-black text-xl tracking-tighter text-gray-900 leading-none">ACİL<span class="text-red-600">ASİSTAN</span></h1>
-                <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Mardin 112 Karar Destek</p>
-            </div>
+        <div>
+            <h1 class="font-black text-xl tracking-tighter text-gray-900 leading-none">ACİL<span class="text-red-600">ASİSTAN</span></h1>
+            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Mardin 112 Karar Destek</p>
         </div>
         <div class="flex items-center gap-2">
             <div id="voice-indicator" class="hidden h-3 w-3 rounded-full bg-green-500 voice-active"></div>
@@ -51,39 +46,56 @@
         <div id="timer-stack" class="space-y-2"></div>
 
         <section id="modul-doz" class="space-y-4">
-            <div class="bg-white rounded-[2.5rem] p-6 border shadow-sm">
+            <div class="bg-white rounded-[2.5rem] p-6 border shadow-sm border-gray-100">
                 <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Hasta Kilosu (kg)</label>
                 <input type="number" id="kiloInput" placeholder="0" class="w-full bg-gray-50 rounded-2xl p-6 text-4xl font-black mt-1 mb-4 outline-none border-2 border-transparent focus:border-red-100 transition-all">
-                <select id="ilacSelect" class="w-full bg-gray-50 rounded-2xl p-5 text-lg font-bold mb-6 outline-none appearance-none"></select>
+                <select id="ilacSelect" class="w-full bg-gray-50 rounded-2xl p-5 text-lg font-bold mb-6 outline-none appearance-none border-2 border-transparent"></select>
                 <button onclick="hesapla()" class="w-full bg-red-600 text-white font-black py-5 rounded-3xl text-xl shadow-lg btn-action">DOZ HESAPLA</button>
                 <div id="sonucPanel" class="hidden mt-6 bg-gray-900 rounded-[2rem] p-8 text-center text-white">
-                    <h3 id="sonucDeger" class="text-5xl font-black mb-1 tracking-tighter">--</h3>
+                    <h3 id="sonucDeger" class="text-5xl font-black mb-1">--</h3>
                     <p id="sonucMetin" class="text-[10px] font-bold text-red-400 uppercase tracking-widest"></p>
                 </div>
             </div>
         </section>
 
         <section id="modul-algo" class="hidden space-y-4">
-            <div id="algo-screen" class="bg-white rounded-[2.5rem] p-6 border shadow-sm min-h-[450px] flex flex-col relative">
-                <button onclick="askArrest()" class="absolute -top-3 -right-3 h-14 w-14 bg-red-600 text-white rounded-2xl shadow-xl shadow-red-200 flex items-center justify-center text-xl z-20 animate-pulse border-4 border-white">
+            <div id="algo-nav-controls" class="hidden flex justify-between items-center gap-3">
+                <button onclick="goBack()" id="algo-back-btn" class="flex-grow bg-blue-50 text-blue-600 font-black py-4 rounded-2xl border border-blue-100 flex items-center justify-center gap-2 btn-action uppercase text-sm">
+                    <i class="fa-solid fa-arrow-left"></i> GERİ DÖN
+                </button>
+                <button onclick="askArrest()" class="h-14 w-20 bg-red-600 text-white rounded-2xl shadow-lg flex items-center justify-center text-xl btn-action animate-pulse border-2 border-white">
                     <i class="fa-solid fa-heart-pulse"></i>
                 </button>
-                <div id="algo-body" class="flex-grow flex flex-col justify-center text-center space-y-4"></div>
+            </div>
+
+            <div id="algo-selection-area" class="space-y-4">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="algoSearch" onkeyup="filterAlgos()" placeholder="Algoritma ara..." class="w-full bg-white border border-gray-100 rounded-2xl p-5 pl-14 font-bold outline-none focus:ring-2 focus:ring-blue-100 transition-all shadow-sm">
+                </div>
+                <div id="algo-list" class="space-y-2">
+                    </div>
+            </div>
+
+            <div id="algo-display-area" class="hidden">
+                <div id="algo-screen" class="bg-white rounded-[2.5rem] p-6 border shadow-sm min-h-[400px] flex flex-col relative">
+                    <div id="algo-body" class="flex-grow flex flex-col justify-center text-center space-y-4"></div>
+                </div>
             </div>
         </section>
 
     </main>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t p-4 flex justify-around z-50">
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t p-4 flex justify-around z-50">
         <button onclick="tabDegistir('doz')" id="nav-doz" class="flex flex-col items-center gap-1 active-tab">
-            <i class="fa-solid fa-calculator text-2xl"></i><span class="text-[10px] font-black uppercase tracking-tighter">Doz</span>
+            <i class="fa-solid fa-calculator text-2xl"></i><span class="text-[10px] font-black uppercase">Doz</span>
         </button>
         <button onclick="tabDegistir('algo')" id="nav-algo" class="flex flex-col items-center gap-1 text-gray-300">
-            <i class="fa-solid fa-route text-2xl"></i><span class="text-[10px] font-black uppercase tracking-tighter">Protokol</span>
+            <i class="fa-solid fa-diagram-project text-2xl"></i><span class="text-[10px] font-black uppercase">Algoritmalar</span>
         </button>
         <div class="w-16"></div>
         <button onclick="askExit()" class="flex flex-col items-center gap-1 text-gray-300">
-            <i class="fa-solid fa-power-off text-2xl"></i><span class="text-[10px] font-black uppercase tracking-tighter">Bitir</span>
+            <i class="fa-solid fa-power-off text-2xl"></i><span class="text-[10px] font-black uppercase">Bitir</span>
         </button>
     </nav>
 
@@ -94,7 +106,7 @@
         let db_drugs = [], db_algos = {}, navHistory = [], activeTimers = {};
         let patientWeight = null;
 
-        // --- SES VE TANIMA SİSTEMİ ---
+        // --- SES SİSTEMİ ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition;
         if(SpeechRecognition) {
@@ -103,21 +115,20 @@
             recognition.lang = 'tr-TR';
             recognition.onresult = (e) => {
                 const cmd = e.results[e.results.length - 1][0].transcript.toLowerCase();
-                if(cmd.includes("uygulandı") || cmd.includes("tamam")) {
-                    const btn = document.querySelector("#algo-body button.bg-red-600");
-                    if(btn) btn.click();
-                }
+                if(cmd.includes("uygulandı") || cmd.includes("evet")) document.querySelector("#algo-body button.bg-red-600")?.click();
                 if(cmd.includes("geri")) goBack();
             };
         }
 
-        // --- MODAL YÖNETİMİ ---
+        // --- MODAL SİSTEMİ ---
         function showModal(config) {
             const overlay = document.getElementById('global-modal');
             const icon = document.getElementById('modal-icon-area');
             const btns = document.getElementById('modal-buttons');
+            const border = document.getElementById('modal-border');
             
-            icon.className = `w-20 h-20 rounded-full flex items-center justify-center mx-auto text-3xl ${config.iconBg || 'bg-gray-100'} ${config.iconColor || 'text-gray-600'}`;
+            border.className = `bg-white rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl space-y-6 text-center border-t-8 ${config.borderColor || 'border-blue-600'}`;
+            icon.className = `w-20 h-20 rounded-full flex items-center justify-center mx-auto text-3xl ${config.iconBg} ${config.iconColor}`;
             icon.innerHTML = `<i class="fa-solid ${config.icon}"></i>`;
             document.getElementById('modal-title').innerText = config.title;
             document.getElementById('modal-content').innerHTML = config.content;
@@ -125,7 +136,7 @@
             btns.innerHTML = '';
             config.buttons.forEach(b => {
                 const btn = document.createElement('button');
-                btn.className = `p-5 rounded-2xl font-black btn-action uppercase text-sm ${b.class}`;
+                btn.className = `p-5 rounded-2xl font-black btn-action uppercase text-xs ${b.class}`;
                 btn.innerText = b.text;
                 btn.onclick = () => { if(b.action) b.action(); overlay.style.display = 'none'; };
                 btns.appendChild(btn);
@@ -135,11 +146,11 @@
 
         function askWeight(id) {
             showModal({
-                title: 'KİLO GİRİŞİ',
+                title: 'KİLO GİRİŞİ', borderColor: 'border-blue-600',
                 icon: 'fa-weight-scale', iconBg: 'bg-blue-100', iconColor: 'text-blue-600',
                 content: `<input type="number" id="modalKiloInput" placeholder="0" class="w-full bg-gray-50 rounded-xl p-4 text-center text-3xl font-black outline-none border-2 border-blue-200">`,
                 buttons: [
-                    { text: 'KİLOSUZ DEVAM', class: 'bg-gray-100 text-gray-400', action: () => { patientWeight = null; showStep(id); }},
+                    { text: 'KİLOSUZ', class: 'bg-gray-100 text-gray-400', action: () => { patientWeight = null; initAlgoStart(id); }},
                     { text: 'BAŞLAT', class: 'bg-blue-600 text-white', action: () => {
                         const val = document.getElementById('modalKiloInput').value;
                         patientWeight = val ? parseFloat(val) : null;
@@ -147,7 +158,7 @@
                             document.getElementById('weight-tag').innerText = patientWeight + " KG";
                             document.getElementById('weight-tag').classList.remove('hidden');
                         }
-                        showStep(id);
+                        initAlgoStart(id);
                     }}
                 ]
             });
@@ -155,14 +166,14 @@
 
         function askArrest() {
             showModal({
-                title: 'ARREST MODU',
+                title: 'ARREST MODU', borderColor: 'border-red-600',
                 icon: 'fa-heart-crack', iconBg: 'bg-red-100', iconColor: 'text-red-600',
                 content: 'Kardiyak arrest protokolüne geçiliyor. Sesli asistan aktif edilecek.',
                 buttons: [
                     { text: 'İPTAL', class: 'bg-gray-100 text-gray-400' },
                     { text: 'ARREST', class: 'bg-red-600 text-white', action: () => {
                         if(recognition) { recognition.start(); document.getElementById('voice-indicator').classList.remove('hidden'); }
-                        showStep('ana_adrenalin_onay');
+                        initAlgoStart('ana_adrenalin_onay');
                     }}
                 ]
             });
@@ -170,49 +181,61 @@
 
         function askExit() {
             showModal({
-                title: 'VAKAYI BİTİR',
-                icon: 'fa-triangle-exclamation', iconBg: 'bg-amber-100', iconColor: 'text-amber-600',
-                content: 'Tüm veriler sıfırlanacak ve ana menüye dönülecek.',
+                title: 'VAKAYI BİTİR', borderColor: 'border-amber-600',
+                icon: 'fa-power-off', iconBg: 'bg-amber-100', iconColor: 'text-amber-600',
+                content: 'Tüm veriler sıfırlanacak. Onaylıyor musunuz?',
                 buttons: [
-                    { text: 'DEVAM ET', class: 'bg-gray-100 text-gray-400' },
-                    { text: 'VAKAYI BİTİR', class: 'bg-amber-600 text-white', action: () => location.reload() }
+                    { text: 'İPTAL', class: 'bg-gray-100 text-gray-400' },
+                    { text: 'BİTİR', class: 'bg-amber-600 text-white', action: () => location.reload() }
                 ]
             });
         }
 
-        // --- SAYAÇ VE PROTOKOL SİSTEMİ ---
-        function createTimer(label, seconds, color = "bg-red-600") {
-            if(activeTimers[label]) clearInterval(activeTimers[label].interval);
-            const id = `timer-${Date.now()}`;
-            const stack = document.getElementById('timer-stack');
-            const el = document.createElement('div');
-            el.className = `timer-card ${color} p-4 rounded-2xl text-white flex justify-between items-center shadow-lg`;
-            el.id = id;
-            el.innerHTML = `<div><p class="text-[9px] font-black uppercase opacity-70">${label}</p><h4 class="text-xl font-black clock">--:--</h4></div><button onclick="this.parentElement.remove()" class="h-8 w-8 bg-white/20 rounded-lg"><i class="fa-solid fa-xmark"></i></button>`;
-            stack.prepend(el);
-            let t = seconds;
-            activeTimers[label] = {
-                interval: setInterval(() => {
-                    let m = parseInt(t/60, 10), s = parseInt(t%60, 10);
-                    el.querySelector('.clock').innerText = (m<10?"0"+m:m) + ":" + (s<10?"0"+s:s);
-                    if(--t < 0) {
-                        clearInterval(activeTimers[label].interval);
-                        speak(`${label} süresi doldu.`);
-                        el.classList.add('animate-pulse', 'ring-4', 'ring-white');
-                    }
-                }, 1000)
-            };
+        // --- ALGORİTMA YÖNETİMİ ---
+        function filterAlgos() {
+            const val = document.getElementById('algoSearch').value.toUpperCase();
+            const btns = document.getElementById('algo-list').getElementsByTagName('button');
+            for (let b of btns) {
+                const txt = b.innerText.toUpperCase();
+                b.style.display = txt.includes(val) ? "" : "none";
+            }
+        }
+
+        function initAlgoStart(id) {
+            document.getElementById('algo-selection-area').classList.add('hidden');
+            document.getElementById('algo-display-area').classList.remove('hidden');
+            document.getElementById('algo-nav-controls').classList.remove('hidden');
+            showStep(id);
+        }
+
+        function renderMenu() {
+            const list = document.getElementById('algo-list');
+            list.innerHTML = '';
+            Object.keys(db_algos).forEach(id => {
+                if(id.endsWith('_basla')) {
+                    // İsim temizleme: Alt tireleri sil, basla'yı sil, büyük harf yap
+                    let cleanName = id.replace('_basla','').replace(/_/g,' ').toUpperCase();
+                    list.innerHTML += `<button onclick="askWeight('${id}')" class="w-full p-6 bg-white border border-gray-100 rounded-2xl font-bold flex justify-between items-center btn-action shadow-sm hover:border-blue-200">
+                        <span>${cleanName}</span> <i class="fa-solid fa-chevron-right text-blue-600 opacity-40"></i>
+                    </button>`;
+                }
+            });
         }
 
         function goBack() {
-            if(navHistory.length > 1) { navHistory.pop(); const prev = navHistory.pop(); showStep(prev); }
+            if(navHistory.length > 1) { 
+                navHistory.pop(); 
+                const prev = navHistory.pop(); 
+                showStep(prev); 
+            } else {
+                location.reload(); // Başlangıca dön
+            }
         }
 
         function showStep(id) {
             const s = db_algos[id];
             if(!s) return;
             navHistory.push(id);
-            document.getElementById('back-btn').classList.toggle('hidden', navHistory.length <= 1);
             const body = document.getElementById('algo-body');
             let txt = s.soru;
             let theme = { bg: "bg-gray-50", text: "text-gray-800", icon: "" };
@@ -229,15 +252,33 @@
                     ${theme.icon}
                     <p class="text-2xl font-bold ${theme.text} leading-tight">${txt}</p>
                 </div>
-                <div class="space-y-3">
-                    ${s.e_metin ? `<button onclick="handleStepClick('${s.e_hedef}', '${id}')" class="w-full p-6 bg-red-600 text-white rounded-3xl font-black btn-action uppercase shadow-xl">${s.e_metin}</button>` : ''}
-                    ${s.h_metin ? `<button onclick="showStep('${s.h_hedef}')" class="w-full p-6 bg-gray-900 text-white rounded-3xl font-black btn-action uppercase">${s.h_metin}</button>` : ''}
+                <div class="space-y-4">
+                    ${s.e_metin ? `<button onclick="handleBtnClick('${s.e_hedef}', '${id}')" class="w-full p-6 bg-red-600 text-white rounded-3xl font-black btn-action uppercase shadow-xl text-lg">${s.e_metin}</button>` : ''}
+                    ${s.h_metin ? `<button onclick="showStep('${s.h_hedef}')" class="w-full p-6 bg-gray-900 text-white rounded-3xl font-black btn-action uppercase text-lg">${s.h_metin}</button>` : ''}
                 </div>
             `;
             speak(s.ses || txt.replace(/<[^>]*>?/gm, ''));
         }
 
-        function handleStepClick(target, current) {
+        function createTimer(label, seconds, color = "bg-red-600") {
+            if(activeTimers[label]) clearInterval(activeTimers[label].interval);
+            const id = `timer-${Date.now()}`;
+            const el = document.createElement('div');
+            el.className = `timer-card ${color} p-4 rounded-2xl text-white flex justify-between items-center shadow-lg`;
+            el.id = id;
+            el.innerHTML = `<div><p class="text-[9px] font-black uppercase opacity-70">${label}</p><h4 class="text-2xl font-black clock">--:--</h4></div><button onclick="this.parentElement.remove()" class="h-10 w-10 bg-white/20 rounded-xl"><i class="fa-solid fa-xmark"></i></button>`;
+            document.getElementById('timer-stack').prepend(el);
+            let t = seconds;
+            activeTimers[label] = {
+                interval: setInterval(() => {
+                    let m = parseInt(t/60, 10), s = parseInt(t%60, 10);
+                    el.querySelector('.clock').innerText = (m<10?"0"+m:m) + ":" + (s<10?"0"+s:s);
+                    if(--t < 0) { clearInterval(activeTimers[label].interval); speak(`${label} süresi doldu.`); el.classList.add('animate-pulse', 'ring-4', 'ring-white'); }
+                }, 1000)
+            };
+        }
+
+        function handleBtnClick(target, current) {
             if(current === 'ana_adrenalin_doz') createTimer("Adrenalin", 300);
             if(current === 'ana_salbu_doz') createTimer("Salbutamol", 1200, "bg-blue-600");
             showStep(target);
@@ -270,18 +311,6 @@
                 });
                 renderMenu();
             } catch(e) { console.error(e); }
-        }
-
-        function renderMenu() {
-            const body = document.getElementById('algo-body');
-            body.innerHTML = '<h3 class="font-black text-2xl text-gray-800 mb-6 uppercase tracking-tighter">Protokol Seçin</h3>';
-            Object.keys(db_algos).forEach(id => {
-                if(id.endsWith('_basla')) {
-                    body.innerHTML += `<button onclick="askWeight('${id}')" class="w-full p-6 bg-blue-600 text-white rounded-3xl font-black mb-3 flex justify-between items-center btn-action shadow-lg shadow-blue-50 uppercase text-lg">
-                        ${id.replace('_basla','').replace('_',' ')} <i class="fa-solid fa-chevron-right opacity-40"></i>
-                    </button>`;
-                }
-            });
         }
 
         function hesapla() {
