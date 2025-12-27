@@ -14,6 +14,7 @@
             background-color: #f1f5f9; 
             -webkit-tap-highlight-color: transparent; 
             overflow-x: hidden; 
+            transition: background-color 0.4s ease;
         }
 
         /* Navigasyon Aktif Sekme */
@@ -47,16 +48,29 @@
             font-size: 10px; 
         }
         
-        /* YETKİ ROZETLERİ (Kullanıcı Renkleri) */
+        /* YETKİ ROZETLERİ */
         .badge-att { background: #3b82f6; color: white; } /* Mavi */
         .badge-pmd { background: #ef4444; color: white; } /* Kırmızı */
         .badge-kkm { background: #22c55e; color: white; } /* Yeşil */
 
-        /* KATEGORİ RENKLERİ */
-        .cat-yetiskin { background: #334155; color: white; }
-        .cat-cocuk { background: #db2777; color: white; }
-        .cat-yenidogan { background: #0d9488; color: white; }
-        .cat-genel { background: #64748b; color: white; }
+        /* KATEGORİ RENKLERİ (Özel Renk Kodları) */
+        .cat-yetiskin { background: #1e40af; color: white; } /* Mavi */
+        .cat-cocuk { background: #db2777; color: white; }    /* Pembe */
+        .cat-yenidogan { background: #7e22ce; color: white; } /* Mor */
+        .cat-genel { background: #475569; color: white; }    /* Gri */
+
+        /* Kategori Filtre Chip Tasarımı */
+        .filter-chip { 
+            padding: 10px 18px; 
+            border-radius: 999px; 
+            font-size: 10px; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            border: 2px solid transparent;
+        }
+        .filter-chip.active { transform: scale(1.05); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: white; }
 
         /* AI Paneli */
         #ai-chat-panel { transform: translateY(100%); transition: transform 0.4s ease-in-out; z-index: 400; }
@@ -80,6 +94,13 @@
 
         /* Yaş Grubu Butonları */
         .age-toggle-btn { transition: all 0.3s ease; }
+
+        /* Algoritma Çerçevesi */
+        .algo-frame {
+            border-top: 12px solid transparent;
+            min-height: calc(100vh - 160px);
+            transition: border-color 0.4s ease;
+        }
     </style>
 </head>
 <body class="pb-32">
@@ -117,7 +138,7 @@
         <section id="modul-doz" class="space-y-4">
             <div class="bg-white rounded-[2.5rem] p-6 border shadow-sm border-gray-100">
                 <label class="text-[10px] font-black text-gray-400 uppercase ml-2">Hızlı Doz Sorgula</label>
-                <input type="number" id="kiloInput" placeholder="Kilo (kg)" class="w-full bg-gray-50 rounded-2xl p-6 text-4xl font-black mt-1 mb-4 outline-none border-2 border-transparent focus:border-red-100">
+                <input type="number" id="kiloInput" placeholder="Kilo (kg)" class="w-full bg-gray-50 rounded-2xl p-6 text-4xl font-black mt-1 mb-4 outline-none border-2 border-transparent focus:border-red-100 text-center">
                 <select id="ilacSelect" class="w-full bg-gray-50 rounded-2xl p-5 text-lg font-bold mb-6 outline-none appearance-none border-2 border-transparent"></select>
                 <button onclick="hesapla()" class="w-full bg-red-600 text-white font-black py-5 rounded-3xl text-xl shadow-lg btn-action uppercase tracking-tight">Hesapla</button>
                 
@@ -130,25 +151,35 @@
 
         <!-- MODÜL 2: ALGORİTMALAR VE PROTOKOLLER -->
         <section id="modul-algo" class="hidden space-y-4">
+            
             <!-- Algoritma Seçim Ekranı -->
             <div id="algo-selection-area" class="space-y-4">
                 <div class="relative">
                     <i class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-gray-400"></i>
                     <input type="text" id="algoSearch" onkeyup="filterAlgos()" placeholder="Algoritma ismi ile ara..." class="w-full bg-white border border-gray-100 rounded-2xl p-5 pl-14 font-bold outline-none shadow-sm focus:ring-2 focus:ring-red-100 transition-all">
                 </div>
+
+                <!-- KATEGORİ FİLTRE BUTONLARI -->
+                <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide no-scrollbar">
+                    <button onclick="setCategoryFilter('all')" id="filter-all" class="filter-chip active bg-slate-900 text-white">Hepsi</button>
+                    <button onclick="setCategoryFilter('yetiskin')" id="filter-yetiskin" class="filter-chip bg-blue-700 text-white">Yetişkin</button>
+                    <button onclick="setCategoryFilter('pediatrik')" id="filter-pediatrik" class="filter-chip bg-pink-600 text-white">Çocuk</button>
+                    <button onclick="setCategoryFilter('yenidogan')" id="filter-yenidogan" class="filter-chip bg-purple-700 text-white">Yenidoğan/Doğum</button>
+                </div>
+
                 <div id="algo-list" class="space-y-2"></div>
             </div>
 
             <!-- Algoritma Uygulama/Ekran Alanı -->
-            <div id="algo-display-area" class="hidden space-y-4">
+            <div id="algo-display-area" class="hidden algo-frame space-y-4">
                 <!-- Üst Kontrol Paneli -->
                 <div class="flex justify-between items-center gap-2">
                     <button onclick="goBack()" class="bg-white text-slate-500 p-4 rounded-2xl border shadow-sm btn-action">
                         <i class="fa-solid fa-arrow-left"></i>
                     </button>
                     
-                    <div id="protocol-breadcrumb" class="flex-grow bg-white px-4 py-2 rounded-2xl border border-dashed border-slate-300 flex flex-col items-center justify-center overflow-hidden">
-                        <span id="cat-badge" class="text-[8px] font-black px-2 py-0.5 rounded-full mb-0.5 uppercase tracking-tighter">BELİRLENİYOR</span>
+                    <div id="protocol-header-area" class="flex-grow bg-white px-4 py-2 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center overflow-hidden transition-all duration-400">
+                        <span id="cat-badge" class="text-[8px] font-black px-3 py-1 rounded-full mb-0.5 uppercase tracking-widest shadow-sm">BELİRLENİYOR</span>
                         <span id="current-protocol-name" class="text-[10px] font-black text-slate-900 uppercase overflow-hidden whitespace-nowrap tracking-tighter w-full text-center">BELİRLENMEDİ</span>
                     </div>
 
@@ -212,35 +243,36 @@
         // Uygulama Durumu (State)
         let db_drugs = [], db_algos = {}, navHistory = [], activeTimers = {};
         let patientWeight = null, ageGroup = 'under12', selectedAlgoId = null;
+        let activeCategoryFilter = 'all';
 
         /**
-         * Akıllı Kategori Analizi
-         * ID öneklerine göre kategoriyi belirler.
+         * Akıllı Kategori Analizi ve Renk Yönetimi
+         * Talebe göre: Yetişkin: Mavi, Doğum/Yenidoğan: Mor, Çocuk: Pembe
          */
         function getCategoryInfo(id) {
-            if (id.startsWith('yetiskin')) return { label: 'YETİŞKİN', class: 'cat-yetiskin', icon: 'fa-user' };
-            if (id.startsWith('cocuk') || id.startsWith('pediatrik')) return { label: 'ÇOCUK', class: 'cat-cocuk', icon: 'fa-child' };
-            if (id.startsWith('yenidogan') || id.startsWith('dogum')) return { label: 'YENİDOĞAN', class: 'cat-yenidogan', icon: 'fa-baby' };
-            return { label: 'GENEL', class: 'cat-genel', icon: 'fa-hospital' };
+            if (!id) return { label: 'GENEL', class: 'cat-genel', icon: 'fa-hospital', color: '#475569' };
+            if (id.startsWith('yetiskin')) return { label: 'YETİŞKİN', class: 'cat-yetiskin', icon: 'fa-user', color: '#1e40af' };
+            if (id.startsWith('cocuk') || id.startsWith('pediatrik')) return { label: 'ÇOCUK', class: 'cat-cocuk', icon: 'fa-child', color: '#db2777' };
+            if (id.startsWith('yenidogan') || id.startsWith('dogum')) return { label: 'YENİDOĞAN', class: 'cat-yenidogan', icon: 'fa-baby', color: '#7e22ce' };
+            return { label: 'GENEL', class: 'cat-genel', icon: 'fa-hospital', color: '#475569' };
         }
 
-        /**
-         * Protokol İsmi Formatlayıcı
-         */
+        function setCategoryFilter(cat) {
+            activeCategoryFilter = cat;
+            document.querySelectorAll('.filter-chip').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`filter-${cat}`).classList.add('active');
+            filterAlgos();
+        }
+
         function getProtocolLabel(id) {
             if(!id) return "BİLİNMİYOR";
             return id.split('_').slice(0, -1).join(' ').toUpperCase();
         }
 
-        /**
-         * İlaç Dozmatik Motoru
-         * Metin içindeki {0.1} gibi değerleri kiloya göre hesaplar.
-         */
         function getCalculatedText(rawText) {
             if(!patientWeight) return rawText.replace(/{([\d.]+)}/g, "$1 mg/kg");
             return rawText.replace(/{([\d.]+)}/g, (m, p1) => {
                 let val = parseFloat(p1) * patientWeight;
-                // Adrenalin Max Doz Kontrolü (0.01 mg/kg standardı)
                 if(p1 === "0.01") {
                     const maxLimit = ageGroup === 'under12' ? 0.3 : 0.5;
                     val = Math.min(val, maxLimit);
@@ -249,26 +281,22 @@
             });
         }
 
-        /**
-         * Adım Teması Belirleyici
-         * Metin içindeki [KRİTİK], [UYARI], [ONAY] etiketlerine göre stil döner.
-         */
         function getStepTheme(txt) {
             if(txt.includes("[KRİTİK]")) return { bg: "bg-red-600", text: "text-white", icon: "fa-biohazard", border: "border-red-700" };
             if(txt.includes("[UYARI]")) return { bg: "bg-amber-500", text: "text-white", icon: "fa-triangle-exclamation", border: "border-amber-600" };
             if(txt.includes("[ONAY]")) return { bg: "bg-emerald-600", text: "text-white", icon: "fa-phone-volume", border: "border-emerald-700" };
-            return { bg: "bg-slate-50", text: "text-slate-800", icon: "fa-stethoscope", border: "border-slate-100" };
+            return { bg: "bg-white", text: "text-slate-800", icon: "fa-stethoscope", border: "border-slate-100" };
         }
 
-        /**
-         * TAM ŞEMA (Full Flow) GÖRÜNÜMÜ
-         */
         function generateFullFlow(startId) {
             const container = document.getElementById('mode-full-flow');
             container.innerHTML = '';
             let currentId = startId;
             let visited = new Set();
             let flowHtml = '';
+
+            const cat = getCategoryInfo(startId);
+            document.querySelector('.algo-frame').style.borderColor = cat.color;
 
             while(currentId && db_algos[currentId] && !visited.has(currentId)) {
                 visited.add(currentId);
@@ -282,7 +310,6 @@
                             <div class="mt-1 opacity-50"><i class="fa-solid ${theme.icon}"></i></div>
                             <div class="text-sm font-bold leading-tight">${cleanTxt}</div>
                         </div>
-                        ${currentId.includes('adrenalin') ? `<button onclick="createTimer('Adrenalin', 300)" class="mt-3 w-full bg-black/10 py-2 rounded-xl text-[9px] font-black uppercase border border-white/20">SAYACI BAŞLAT</button>` : ''}
                     </div>
                 `;
 
@@ -295,33 +322,30 @@
             speak("Tam akış şeması hazırlandı.");
         }
 
-        /**
-         * ADIM ADIM (Interactive) GÖRÜNÜMÜ
-         */
         function showStep(id) {
             const s = db_algos[id];
             if(!s) return;
             
-            // Geçmişe Ekle (Geri Butonu İçin)
             if(navHistory[navHistory.length-1] !== id) navHistory.push(id);
             
-            // Kategori ve Başlık Güncelleme
             const cat = getCategoryInfo(id);
             const badge = document.getElementById('cat-badge');
+            const headerArea = document.getElementById('protocol-header-area');
+            const frame = document.querySelector('.algo-frame');
+
             badge.innerText = cat.label;
-            badge.className = `text-[8px] font-black px-2 py-0.5 rounded-full mb-0.5 ${cat.class}`;
+            badge.className = `text-[8px] font-black px-3 py-1 rounded-full mb-0.5 shadow-sm ${cat.class}`;
+            headerArea.style.borderColor = cat.color;
+            frame.style.borderColor = cat.color;
+            
             document.getElementById('current-protocol-name').innerText = getProtocolLabel(id);
 
             const body = document.getElementById('algo-body');
             const theme = getStepTheme(s.soru);
             
-            // Dinamik Sayaç Tetikleyici
             const timerMatch = s.soru.match(/\(SAYAÇ:(\d+)\)/);
-            if (timerMatch) {
-                createTimer(id.includes('adrenalin') ? "Adrenalin" : "BEKLEME SÜRESİ", parseInt(timerMatch[1]));
-            }
+            if (timerMatch) createTimer(id.includes('adrenalin') ? "Adrenalin" : "BEKLEME SÜRESİ", parseInt(timerMatch[1]));
 
-            // Yetki Rozetleri Hazırlığı
             let badgesHtml = '';
             if(s.soru.includes('[ATT]')) badgesHtml += `<span class="badge-att px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-sm">ATT</span>`;
             if(s.soru.includes('[PARAMEDİK]')) badgesHtml += `<span class="badge-pmd px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-sm">PMD</span>`;
@@ -331,7 +355,7 @@
 
             body.innerHTML = `
                 <div class="flex justify-center gap-2 mb-2">${badgesHtml}</div>
-                <div class="p-8 ${theme.bg} ${theme.text} rounded-[2.5rem] mb-4 shadow-xl border ${theme.border} ring-8 ring-white/10">
+                <div class="p-8 ${theme.bg} ${theme.text} rounded-[2.5rem] mb-4 shadow-xl border-4 ${theme.border} ring-8 ring-slate-200/50">
                     <i class="fa-solid ${theme.icon} text-5xl mb-6 opacity-30"></i>
                     <p class="text-2xl font-black leading-tight">${cleanTxt}</p>
                 </div>
@@ -341,37 +365,21 @@
                 </div>
             `;
             
-            // Sesli Okuma
             speak(s.ses || s.soru.replace(/\[.*?\]/g, '').replace(/\(SAYAÇ:\d+\)/g, '').replace(/<[^>]*>?/gm, ''));
         }
 
-        /**
-         * SAYAÇ SİSTEMİ
-         */
         function createTimer(label, alertSecond) {
             const tid = `timer-${Date.now()}`;
             const el = document.createElement('div');
             el.className = `timer-card bg-slate-800 p-5 rounded-3xl text-white flex justify-between items-center shadow-xl border-l-8 border-red-500`;
             el.id = tid;
-            
-            el.innerHTML = `
-                <div>
-                    <p class="text-[9px] font-black uppercase opacity-70">${label}</p>
-                    <h4 class="text-3xl font-black clock tracking-tighter">00:00</h4>
-                </div>
-                <button onclick="clearInterval(activeTimers['${tid}']); this.parentElement.remove()" class="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>`;
-            
+            el.innerHTML = `<div><p class="text-[9px] font-black uppercase opacity-70">${label}</p><h4 class="text-3xl font-black clock tracking-tighter">00:00</h4></div><button onclick="clearInterval(activeTimers['${tid}']); this.parentElement.remove()" class="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl"><i class="fa-solid fa-xmark"></i></button>`;
             document.getElementById('timer-stack').prepend(el);
-
             let t = 0;
             activeTimers[tid] = setInterval(() => {
                 t++;
-                let m = Math.floor(t / 60);
-                let s = t % 60;
+                let m = Math.floor(t / 60); let s = t % 60;
                 el.querySelector('.clock').innerText = (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
-                
                 if (alertSecond > 0 && t === alertSecond) {
                     el.classList.add('animate-pulse', 'ring-4', 'ring-white');
                     speak(`${label} süresi doldu.`);
@@ -379,10 +387,6 @@
             }, 1000);
         }
 
-        /**
-         * AKILLI KİLO KONTROLÜ
-         * Algoritmada ilaç dozu var mı kontrol eder.
-         */
         function checkIfNeedsWeight(startId) {
             let queue = [startId];
             let visited = new Set();
@@ -397,9 +401,6 @@
             return false;
         }
 
-        /**
-         * MODAL: Kilo ve Yaş Sorgulama
-         */
         function askWeight(id) {
             selectedAlgoId = id;
             if (!checkIfNeedsWeight(id)) {
@@ -408,26 +409,18 @@
                 askViewMode();
                 return;
             }
-
             showModal({
                 title: 'HASTA BİLGİSİ', icon: 'fa-weight-scale', iconBg: 'bg-blue-100', iconColor: 'text-blue-600',
-                content: `
-                    <input type="number" id="modalKiloInput" placeholder="Kilo (kg)" class="w-full bg-gray-50 rounded-2xl p-5 text-center text-4xl font-black outline-none border-2 border-blue-100 mb-4">
-                    <div class="flex p-1 bg-slate-100 rounded-2xl">
-                        <button id="btnAgeU" onclick="ageGroup='under12'; updateAgeToggle(this);" class="flex-1 py-3 rounded-xl font-bold text-[10px] bg-white text-red-600 shadow-sm age-toggle-btn">&lt; 12 YAŞ</button>
-                        <button id="btnAgeO" onclick="ageGroup='over12'; updateAgeToggle(this);" class="flex-1 py-3 rounded-xl font-bold text-[10px] text-slate-500 age-toggle-btn">&ge; 12 YAŞ</button>
-                    </div>`,
-                buttons: [
-                    { text: 'DEVAM ET', class: 'bg-red-600 text-white mt-4', action: () => {
-                        const val = document.getElementById('modalKiloInput').value;
-                        patientWeight = val ? parseFloat(val) : null;
-                        if(patientWeight) {
-                            document.getElementById('weight-tag').innerText = patientWeight + " KG";
-                            document.getElementById('weight-tag').classList.remove('hidden');
-                        }
-                        askViewMode();
-                    }, keepOpen: true }
-                ]
+                content: `<input type="number" id="modalKiloInput" placeholder="Kilo (kg)" class="w-full bg-gray-50 rounded-2xl p-5 text-center text-4xl font-black outline-none border-2 border-blue-100 mb-4"><div class="flex p-1 bg-slate-100 rounded-2xl"><button id="btnAgeU" onclick="ageGroup='under12'; updateAgeToggle(this);" class="flex-1 py-3 rounded-xl font-bold text-[10px] bg-white text-red-600 shadow-sm age-toggle-btn">&lt; 12 YAŞ</button><button id="btnAgeO" onclick="ageGroup='over12'; updateAgeToggle(this);" class="flex-1 py-3 rounded-xl font-bold text-[10px] text-slate-500 age-toggle-btn">&ge; 12 YAŞ</button></div>`,
+                buttons: [{ text: 'DEVAM ET', class: 'bg-red-600 text-white mt-4', action: () => {
+                    const val = document.getElementById('modalKiloInput').value;
+                    patientWeight = val ? parseFloat(val) : null;
+                    if(patientWeight) {
+                        document.getElementById('weight-tag').innerText = patientWeight + " KG";
+                        document.getElementById('weight-tag').classList.remove('hidden');
+                    }
+                    askViewMode();
+                }, keepOpen: true }]
             });
         }
 
@@ -436,23 +429,14 @@
             btn.className = "flex-1 py-3 rounded-xl font-bold text-[10px] bg-white text-red-600 shadow-sm age-toggle-btn";
         }
 
-        /**
-         * MODAL: Görünüm Modu Seçimi
-         */
         function askViewMode() {
             showModal({
                 title: 'GÖRÜNÜM SEÇİN', icon: 'fa-eye', iconBg: 'bg-red-100', iconColor: 'text-red-600',
                 content: 'Uygulama kullanım modunu belirleyiniz.',
-                buttons: [
-                    { text: 'ADIM ADIM (İnteraktif)', class: 'bg-red-600 text-white', action: () => initUI('step') },
-                    { text: 'TAM ŞEMA (Görsel)', class: 'bg-slate-800 text-white', action: () => initUI('flow') }
-                ]
+                buttons: [{ text: 'ADIM ADIM (İnteraktif)', class: 'bg-red-600 text-white', action: () => initUI('step') }, { text: 'TAM ŞEMA (Görsel)', class: 'bg-slate-800 text-white', action: () => initUI('flow') }]
             });
         }
 
-        /**
-         * UI Mod Geçişi
-         */
         function initUI(mode) {
             document.getElementById('algo-selection-area').classList.add('hidden');
             document.getElementById('algo-display-area').classList.remove('hidden');
@@ -467,37 +451,18 @@
             }
         }
 
-        /**
-         * ADIM TIKLAMA YÖNETİMİ
-         * Protokol geçişlerini ve sayaç kapatma mantığını yönetir.
-         */
         function handleStepClick(target, current, btnText) {
-            // "Güvenlik Sağlandı" Sayaç Kapatma Mantığı
             if (btnText === "GÜVENLİK SAĞLANDI") {
                 document.querySelectorAll('.timer-card').forEach(card => {
-                    if (card.innerText.includes("BEKLEME SÜRESİ")) {
-                        clearInterval(activeTimers[card.id]);
-                        card.remove();
-                    }
+                    if (card.innerText.includes("BEKLEME SÜRESİ")) { clearInterval(activeTimers[card.id]); card.remove(); }
                 });
             }
-
-            // Protokol Geçiş Uyarı Mantığı
             if(target.endsWith('_basla')) {
                 const newProto = getProtocolLabel(target);
-                showModal({
-                    title: 'PROTOKOL GEÇİŞİ', icon: 'fa-shuffle', iconBg: 'bg-blue-100', iconColor: 'text-blue-600',
-                    content: `Şu an mevcut akıştan ayrılıp <b>${newProto}</b> protokolüne geçiş yapıyorsunuz.`,
-                    buttons: [{ text: 'DEVAM ET', class: 'bg-blue-600 text-white', action: () => showStep(target) }]
-                });
-            } else {
-                showStep(target);
-            }
+                showModal({ title: 'PROTOKOL GEÇİŞİ', icon: 'fa-shuffle', iconBg: 'bg-blue-100', iconColor: 'text-blue-600', content: `Şu an mevcut akıştan ayrılıp <b>${newProto}</b> protokolüne geçiş yapıyorsunuz.`, buttons: [{ text: 'DEVAM ET', class: 'bg-blue-600 text-white', action: () => showStep(target) }] });
+            } else showStep(target);
         }
 
-        /**
-         * MODAL YARDIMCISI
-         */
         function showModal(config) {
             const overlay = document.getElementById('global-modal');
             const btns = document.getElementById('modal-buttons');
@@ -516,68 +481,43 @@
             overlay.style.display = 'flex';
         }
 
-        /**
-         * BAŞLATMA VE VERİ ÇEKME
-         */
         async function init() {
             try {
-                // İlaçları Çek
-                const rI = await fetch(URL_ILAC); 
-                const tI = await rI.text();
-                tI.split('\n').slice(1).forEach(l => { 
-                    const c = parseCSV(l); 
-                    if(c[0]) db_drugs.push({ad: c[0], doz: parseFloat(c[1]), birim: c[2]||'mg'}); 
-                });
+                const rI = await fetch(URL_ILAC); const tI = await rI.text();
+                tI.split('\n').slice(1).forEach(l => { const c = parseCSV(l); if(c[0]) db_drugs.push({ad: c[0], doz: parseFloat(c[1]), birim: c[2]||'mg'}); });
                 db_drugs.forEach((d, i) => document.getElementById('ilacSelect').innerHTML += `<option value="${i}">${d.ad}</option>`);
-                
-                // Algoritmaları Çek
-                const rA = await fetch(URL_ALGO); 
-                const tA = await rA.text();
+                const rA = await fetch(URL_ALGO); const tA = await rA.text();
                 tA.split('\n').slice(1).forEach(l => {
                     const c = parseCSV(l);
                     if(c[0]) db_algos[c[0]] = { soru: c[1], e_metin: c[2], e_hedef: c[3], h_metin: c[4], h_hedef: c[5], ses: c[6] };
                 });
-                
-                // Listeyi İnşa Et
-                const list = document.getElementById('algo-list');
-                Object.keys(db_algos).forEach(id => {
-                    if(id.endsWith('_basla')) {
-                        let clean = getProtocolLabel(id);
-                        let cat = getCategoryInfo(id);
-                        list.innerHTML += `
-                            <button onclick="askWeight('${id}')" class="w-full p-6 bg-white border border-gray-100 rounded-3xl font-bold flex justify-between items-center btn-action shadow-sm mb-2 text-left text-sm group">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 ${cat.class} rounded-full flex items-center justify-center text-white text-xs">
-                                        <i class="fa-solid ${cat.icon}"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-[8px] opacity-40 font-black tracking-widest">${cat.label}</p>
-                                        <p>${clean}</p>
-                                    </div>
-                                </div>
-                                <i class="fa-solid fa-chevron-right text-red-600 opacity-20 group-hover:opacity-100 transition-all"></i>
-                            </button>`;
-                    }
-                });
-            } catch(e) { console.error("Kritik veri yükleme hatası:", e); }
+                renderAlgoList();
+            } catch(e) { console.error("Hata:", e); }
         }
 
-        /**
-         * CSV PARSER (Tırnak Dostu)
-         */
+        function renderAlgoList() {
+            const list = document.getElementById('algo-list');
+            list.innerHTML = '';
+            Object.keys(db_algos).forEach(id => {
+                if(id.endsWith('_basla')) {
+                    let clean = getProtocolLabel(id);
+                    let cat = getCategoryInfo(id);
+                    const searchText = document.getElementById('algoSearch').value.toUpperCase();
+                    const matchSearch = clean.includes(searchText);
+                    const matchFilter = activeCategoryFilter === 'all' || id.startsWith(activeCategoryFilter) || (activeCategoryFilter === 'yenidogan' && id.startsWith('dogum'));
+                    if(matchSearch && matchFilter) {
+                        list.innerHTML += `<button onclick="askWeight('${id}')" class="w-full p-6 bg-white border border-gray-100 rounded-3xl font-bold flex justify-between items-center btn-action shadow-sm mb-2 text-left text-sm group"><div class="flex items-center gap-3"><div class="w-10 h-10 ${cat.class} rounded-full flex items-center justify-center text-white text-xs"><i class="fa-solid ${cat.icon}"></i></div><div><p class="text-[8px] opacity-40 font-black tracking-widest">${cat.label}</p><p>${clean}</p></div></div><i class="fa-solid fa-chevron-right text-red-600 opacity-20"></i></button>`;
+                    }
+                }
+            });
+        }
+
         function parseCSV(line) {
             let arr = []; let quote = false; let col = '';
-            for (let c of line) { 
-                if (c === '"') quote = !quote; 
-                else if (c === ',' && !quote) { arr.push(col.trim()); col = ''; } 
-                else col += c; 
-            }
+            for (let c of line) { if (c === '"') quote = !quote; else if (c === ',' && !quote) { arr.push(col.trim()); col = ''; } else col += c; }
             arr.push(col.trim()); return arr;
         }
 
-        /**
-         * SEKME YÖNETİMİ
-         */
         function tabDegistir(h) {
             document.getElementById('modul-doz').classList.toggle('hidden', h !== 'doz');
             document.getElementById('modul-algo').classList.toggle('hidden', h !== 'algo');
@@ -585,9 +525,6 @@
             document.getElementById('nav-algo').classList.toggle('active-tab', h === 'algo');
         }
 
-        /**
-         * DOZ HESAPLAMA (Dozmatik)
-         */
         function hesapla() {
             const k = document.getElementById('kiloInput').value;
             const i = db_drugs[document.getElementById('ilacSelect').value];
@@ -599,58 +536,16 @@
             document.getElementById('sonucDeger').innerText = res + " " + i.birim;
             document.getElementById('sonucMetin').innerText = i.ad;
             document.getElementById('sonucPanel').classList.remove('hidden');
-            speak(`${i.ad} için hesaplanan doz ${res} ${i.birim}`);
+            speak(`${i.ad} için doz ${res} ${i.birim}`);
         }
 
-        /**
-         * DİĞER FONKSİYONLAR
-         */
-        function goBack() { 
-            if(navHistory.length > 1) { 
-                navHistory.pop(); 
-                showStep(navHistory.pop()); 
-            } else { 
-                location.reload(); 
-            } 
-        }
-
+        function goBack() { if(navHistory.length > 1) { navHistory.pop(); showStep(navHistory.pop()); } else location.reload(); }
         function toggleAIChat() { document.getElementById('ai-chat-panel').classList.toggle('open'); }
-
-        async function sendToAI() {
-            const inp = document.getElementById('chatInput');
-            const msg = inp.value.trim();
-            if(!msg) return;
-            addMessage(msg, 'user');
-            inp.value = '';
-            setTimeout(() => addMessage("Protokol veri tabanını tarıyorum. Mardin 112 rehberine göre cevap hazırlanıyor...", 'bot'), 600);
-        }
-
-        function addMessage(txt, side) {
-            const cont = document.getElementById('chat-messages');
-            const d = document.createElement('div');
-            d.className = `chat-bubble ${side === 'user' ? 'user-msg' : 'bot-msg'}`;
-            d.innerText = txt;
-            cont.appendChild(d);
-            cont.scrollTop = cont.scrollHeight;
-        }
-
-        function speak(t) { 
-            window.speechSynthesis.cancel(); 
-            const m = new SpeechSynthesisUtterance(t); 
-            m.lang = 'tr-TR'; 
-            m.onstart = () => document.getElementById('voice-indicator').classList.remove('hidden');
-            m.onend = () => document.getElementById('voice-indicator').classList.add('hidden');
-            window.speechSynthesis.speak(m); 
-        }
-
+        async function sendToAI() { const inp = document.getElementById('chatInput'); const msg = inp.value.trim(); if(!msg) return; addMessage(msg, 'user'); inp.value = ''; setTimeout(() => addMessage("Mardin 112 rehberine göre cevap hazırlanıyor...", 'bot'), 600); }
+        function addMessage(txt, side) { const cont = document.getElementById('chat-messages'); const d = document.createElement('div'); d.className = `chat-bubble ${side === 'user' ? 'user-msg' : 'bot-msg'}`; d.innerText = txt; cont.appendChild(d); cont.scrollTop = cont.scrollHeight; }
+        function speak(t) { window.speechSynthesis.cancel(); const m = new SpeechSynthesisUtterance(t); m.lang = 'tr-TR'; m.onstart = () => document.getElementById('voice-indicator').classList.remove('hidden'); m.onend = () => document.getElementById('voice-indicator').classList.add('hidden'); window.speechSynthesis.speak(m); }
         function askArrest() { askWeight('yetiskin_arrest_basla'); }
-
-        function filterAlgos() {
-            const val = document.getElementById('algoSearch').value.toUpperCase();
-            const btns = document.getElementById('algo-list').getElementsByTagName('button');
-            for(let b of btns) b.style.display = b.innerText.toUpperCase().includes(val) ? "" : "none";
-        }
-
+        function filterAlgos() { renderAlgoList(); }
         window.onload = init;
     </script>
 </body>
