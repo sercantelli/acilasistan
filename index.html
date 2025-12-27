@@ -348,7 +348,7 @@
 
             let badgesHtml = '';
             if(s.soru.includes('[ATT]')) badgesHtml += `<span class="badge-att px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-sm">ATT</span>`;
-            if(s.soru.includes('[PARAMEDİK]')) badgesHtml += `<span class="badge-pmd px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-sm">PMD</span>`;
+            if(s.soru.includes('[PARAMEDİK]')) badgesHtml += `<span class="badge-pmd px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-sm">PARAMEDİK</span>`;
             if(s.soru.includes('[ONAY]')) badgesHtml += `<span class="badge-kkm px-3 py-1 rounded-full text-[8px] font-black uppercase animate-pulse tracking-widest shadow-sm">KKM ONAYI</span>`;
 
             const cleanTxt = getCalculatedText(s.soru.replace(/\[.*?\]/g, '').replace(/\(SAYAÇ:\d+\)/g, ''));
