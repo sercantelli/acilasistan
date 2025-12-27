@@ -14,19 +14,20 @@
         .btn-action:active { transform: scale(0.95); }
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); z-index: 500; align-items: center; justify-content: center; padding: 1.5rem; }
         
-        /* Şema Okları (React Tasarımın) */
         .flow-arrow { width: 2px; height: 20px; background: #cbd5e1; margin: 4px auto; position: relative; }
         .flow-arrow::after { content: '▼'; position: absolute; bottom: -8px; left: -4.5px; color: #cbd5e1; font-size: 10px; }
-        .info-note { border-left: 4px solid #f59e0b; background: #fffbeb; }
         
-        /* AI Paneli */
+        /* Yetki Rozetleri */
+        .badge-att { background: #3b82f6; color: white; }
+        .badge-pmd { background: #f59e0b; color: white; }
+        .badge-kkm { background: #dc2626; color: white; }
+
         #ai-chat-panel { transform: translateY(100%); transition: transform 0.4s ease-in-out; z-index: 400; }
         #ai-chat-panel.open { transform: translateY(0); }
         .chat-bubble { max-width: 85%; border-radius: 1.5rem; padding: 1rem; font-size: 0.85rem; margin-bottom: 0.5rem; }
         .bot-msg { background: #f1f5f9; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 0.2rem; }
         .user-msg { background: #ef4444; color: white; align-self: flex-end; border-bottom-right-radius: 0.2rem; }
         
-        /* Sayaç Kartı */
         .timer-card { animation: slideIn 0.3s ease-out; border-bottom: 5px solid rgba(0,0,0,0.1); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .voice-active { animation: pulseGreen 1.5s infinite; }
@@ -35,8 +36,9 @@
 </head>
 <body class="pb-32">
 
+    <!-- Global Modal -->
     <div id="global-modal" class="modal-overlay">
-        <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl space-y-6 text-center border-t-8 border-blue-600" id="modal-border">
+        <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl space-y-6 text-center border-t-8 border-red-600" id="modal-container">
             <div id="modal-icon-area" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto text-2xl"></div>
             <h2 id="modal-title" class="text-xl font-black text-gray-900 leading-tight"></h2>
             <div id="modal-content"></div>
@@ -44,6 +46,7 @@
         </div>
     </div>
 
+    <!-- Header -->
     <header class="bg-white sticky top-0 z-50 border-b p-4 shadow-sm flex justify-between items-center">
         <div onclick="location.reload()" class="cursor-pointer">
             <h1 class="font-black text-xl tracking-tighter text-gray-900 leading-none">MARDİN<span class="text-red-600">112</span></h1>
@@ -55,12 +58,14 @@
         </div>
     </header>
 
+    <!-- Dinamik Sayaç Alanı -->
     <div id="fixed-timers" class="p-4 space-y-2 sticky top-[73px] z-40 bg-f1f5f9/90 backdrop-blur-sm">
         <div id="timer-stack" class="space-y-2"></div>
     </div>
 
     <main class="max-w-lg mx-auto p-4 space-y-4">
         
+        <!-- MODÜL: DOZ HESAPLAMA -->
         <section id="modul-doz" class="space-y-4">
             <div class="bg-white rounded-[2.5rem] p-6 border shadow-sm border-gray-100">
                 <label class="text-[10px] font-black text-gray-400 uppercase ml-2">Hızlı Doz Sorgula</label>
@@ -74,36 +79,43 @@
             </div>
         </section>
 
+        <!-- MODÜL: ALGORİTMALAR -->
         <section id="modul-algo" class="hidden space-y-4">
-            
+            <!-- Seçim Alanı -->
             <div id="algo-selection-area" class="space-y-4">
                 <div class="relative">
                     <i class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" id="algoSearch" onkeyup="filterAlgos()" placeholder="Algoritma ismi ile ara..." class="w-full bg-white border border-gray-100 rounded-2xl p-5 pl-14 font-bold outline-none shadow-sm focus:ring-2 focus:ring-blue-100 transition-all">
+                    <input type="text" id="algoSearch" onkeyup="filterAlgos()" placeholder="Algoritma ara..." class="w-full bg-white border border-gray-100 rounded-2xl p-5 pl-14 font-bold outline-none shadow-sm focus:ring-2 focus:ring-red-100 transition-all">
                 </div>
                 <div id="algo-list" class="space-y-2"></div>
             </div>
 
+            <!-- Uygulama Alanı -->
             <div id="algo-display-area" class="hidden space-y-4">
                 <div class="flex justify-between items-center gap-2">
-                    <button onclick="goBack()" class="flex-grow bg-white text-slate-500 font-bold py-4 rounded-2xl border shadow-sm flex items-center justify-center gap-2 btn-action uppercase text-xs">
-                        <i class="fa-solid fa-arrow-left"></i> Geri Dön
+                    <button onclick="goBack()" class="bg-white text-slate-500 p-4 rounded-2xl border shadow-sm btn-action">
+                        <i class="fa-solid fa-arrow-left"></i>
                     </button>
-                    <button onclick="askArrest()" class="h-14 w-20 bg-red-600 text-white rounded-2xl shadow-lg flex items-center justify-center text-2xl animate-pulse border-4 border-white">
+                    <div id="protocol-breadcrumb" class="flex-grow bg-white px-5 py-3 rounded-2xl border border-dashed border-slate-300 text-[10px] font-black text-slate-400 uppercase overflow-hidden whitespace-nowrap">
+                        PROTOKOL: <span id="current-protocol-name" class="text-slate-900">BELİRLENMEDİ</span>
+                    </div>
+                    <button onclick="askArrest()" class="h-14 w-14 bg-red-600 text-white rounded-2xl shadow-lg flex items-center justify-center text-xl animate-pulse border-4 border-white">
                         <i class="fa-solid fa-heart-pulse"></i>
                     </button>
                 </div>
 
+                <!-- Adım Adım Modu -->
                 <div id="mode-step-by-step" class="hidden">
                     <div id="algo-body" class="bg-white rounded-[3rem] p-6 border shadow-sm min-h-[400px] flex flex-col justify-center text-center space-y-6"></div>
                 </div>
 
-                <div id="mode-full-flow" class="hidden space-y-1"></div>
+                <!-- Tam Şema Modu -->
+                <div id="mode-full-flow" class="hidden space-y-2"></div>
             </div>
         </section>
-
     </main>
 
+    <!-- AI Bot -->
     <button onclick="toggleAIChat()" class="fixed bottom-24 right-6 h-16 w-16 bg-gray-900 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-[400] btn-action border-4 border-white">
         <i class="fa-solid fa-robot"></i>
     </button>
@@ -112,14 +124,12 @@
         <div class="flex justify-between items-center mb-4">
             <div>
                 <h3 class="font-black text-xl text-gray-900">Protokol Asistanı</h3>
-                <div class="flex gap-2 mt-1">
-                    <span id="ai-mode-tag" class="text-[9px] font-black px-3 py-1 bg-blue-600 text-white rounded-full uppercase">Bilgi Bankası</span>
-                </div>
+                <span class="text-[9px] font-black px-3 py-1 bg-blue-600 text-white rounded-full uppercase">Bilgi Bankası</span>
             </div>
             <button onclick="toggleAIChat()" class="h-10 w-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div id="chat-messages" class="flex-grow overflow-y-auto flex flex-col gap-2 p-2">
-            <div class="chat-bubble bot-msg">Merhaba! Ben Mardin 112 AI asistanıyım. Algoritma kitabındaki tüm verilere hakimim. Bana her şeyi sorabilirsiniz.</div>
+            <div class="chat-bubble bot-msg">Merhaba! Ben Mardin 112 AI asistanıyım. Algoritma kitabındaki tüm verilere hakimim.</div>
         </div>
         <div class="mt-4 flex gap-2">
             <input type="text" id="chatInput" placeholder="Mesajınızı yazın..." class="flex-grow bg-gray-50 border-none rounded-2xl p-4 font-medium outline-none">
@@ -127,6 +137,7 @@
         </div>
     </div>
 
+    <!-- Navigasyon -->
     <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t p-4 flex justify-around z-50">
         <button onclick="tabDegistir('doz')" id="nav-doz" class="flex flex-col items-center gap-1 active-tab">
             <i class="fa-solid fa-calculator text-2xl"></i><span class="text-[10px] font-black uppercase">Doz</span>
@@ -136,7 +147,7 @@
         </button>
         <div class="w-16"></div>
         <button onclick="location.reload()" class="flex flex-col items-center gap-1 text-gray-300">
-            <i class="fa-solid fa-power-off text-2xl"></i><span class="text-[10px] font-black uppercase">Bitir</span>
+            <i class="fa-solid fa-rotate text-2xl"></i><span class="text-[10px] font-black uppercase">Yenile</span>
         </button>
     </nav>
 
@@ -147,21 +158,26 @@
         let db_drugs = [], db_algos = {}, navHistory = [], activeTimers = {};
         let patientWeight = null, ageGroup = 'under12', selectedAlgoId = null;
 
-        // --- DOZ HESAPLAMA MOTORU ---
+        // --- ID Analizi ---
+        function getProtocolLabel(id) {
+            if(!id) return "BİLİNMİYOR";
+            return id.split('_').slice(0, -1).join(' ').toUpperCase();
+        }
+
+        // --- Dozmatik ---
         function getCalculatedText(rawText) {
             if(!patientWeight) return rawText.replace(/{([\d.]+)}/g, "$1 mg/kg");
             return rawText.replace(/{([\d.]+)}/g, (m, p1) => {
                 let val = parseFloat(p1) * patientWeight;
-                // Adrenalin Max Doz Kontrolü (React kodundaki mantık)
                 if(p1 === "0.01") {
                     const max = ageGroup === 'under12' ? 0.3 : 0.5;
                     val = Math.min(val, max);
                 }
-                return `<span class="bg-white/40 px-2 rounded font-black border-b-2 border-current">${val.toFixed(2)}</span>`;
+                return `<span class="bg-red-50 text-red-700 px-1 rounded font-black border-b border-red-200">${val.toFixed(2)}</span>`;
             });
         }
 
-        // --- TAM ŞEMA JENERATÖRÜ (Otomatik) ---
+        // --- TAM ŞEMA JENERATÖRÜ ---
         function generateFullFlow(startId) {
             const container = document.getElementById('mode-full-flow');
             container.innerHTML = '';
@@ -172,23 +188,24 @@
             while(currentId && db_algos[currentId] && !visited.has(currentId)) {
                 visited.add(currentId);
                 const step = db_algos[currentId];
-                const cleanTxt = getCalculatedText(step.soru);
+                const txt = step.soru;
                 
-                let cardClass = "bg-white border border-slate-200 text-slate-800";
+                let cardClass = "bg-white border border-slate-200 text-slate-800 shadow-sm";
                 let icon = '<i class="fa-solid fa-chevron-right text-blue-500 opacity-30"></i>';
 
-                if(step.soru.includes("[KRİTİK]")) { cardClass = "bg-red-600 text-white shadow-lg ring-4 ring-red-100"; icon = '<i class="fa-solid fa-triangle-exclamation"></i>'; }
-                else if(step.soru.includes("[UYARI]")) { cardClass = "bg-amber-50 text-amber-900 border-2 border-amber-100"; icon = '<i class="fa-solid fa-circle-exclamation"></i>'; }
-                else if(step.soru.includes("[BİLGİ]")) { cardClass = "bg-slate-800 text-white"; icon = '<i class="fa-solid fa-info-circle opacity-50"></i>'; }
-                else if(step.soru.includes("[ONAY]")) { cardClass = "bg-emerald-600 text-white"; icon = '<i class="fa-solid fa-phone"></i>'; }
+                if(txt.includes("[KRİTİK]")) { cardClass = "bg-red-600 text-white shadow-lg"; icon = '<i class="fa-solid fa-triangle-exclamation"></i>'; }
+                else if(txt.includes("[ONAY]")) { cardClass = "bg-emerald-600 text-white shadow-lg"; icon = '<i class="fa-solid fa-phone"></i>'; }
+                else if(txt.includes("[UYARI]")) { cardClass = "bg-amber-50 text-amber-900 border-2 border-amber-100"; icon = '<i class="fa-solid fa-circle-exclamation"></i>'; }
+
+                const cleanTxt = getCalculatedText(txt.replace(/\[.*?\]/g, ''));
 
                 flowHtml += `
-                    <div class="p-5 rounded-[2rem] ${cardClass} relative overflow-hidden transition-all">
+                    <div class="p-5 rounded-[2rem] ${cardClass} relative overflow-hidden">
                         <div class="flex items-start gap-3">
                             <div class="mt-1">${icon}</div>
-                            <div class="text-sm font-bold leading-tight">${cleanTxt.replace(/\[.*?\]/g, '')}</div>
+                            <div class="text-sm font-bold leading-tight">${cleanTxt}</div>
                         </div>
-                        ${currentId.includes('adrenalin') ? `<button onclick="createTimer('Adrenalin', 300)" class="mt-3 w-full bg-black/10 py-2 rounded-xl text-[9px] font-black uppercase border border-white/20">SAYACI BAŞLAT</button>` : ''}
+                        ${currentId.includes('adrenalin') ? `<button onclick="createTimer('Adrenalin', 300)" class="mt-3 w-full bg-black/10 py-2 rounded-xl text-[9px] font-black uppercase">SAYACI BAŞLAT</button>` : ''}
                     </div>
                 `;
 
@@ -202,136 +219,124 @@
         }
 
         // --- ADIM ADIM MODU ---
-    function showStep(id) {
-    const s = db_algos[id];
-    if(!s) { location.reload(); return; }
-    
-    if(navHistory[navHistory.length-1] !== id) navHistory.push(id);
-    const body = document.getElementById('algo-body');
-    let txt = getCalculatedText(s.soru);
-    let transitionVisual = ""; // Görsel uyarı için değişken
-    let transitionVoice = "";  // Sesli uyarı için değişken
+        function showStep(id) {
+            const s = db_algos[id];
+            if(!s) return;
+            
+            if(navHistory[navHistory.length-1] !== id) navHistory.push(id);
+            document.getElementById('current-protocol-name').innerText = getProtocolLabel(id);
 
-    // --- ALGORİTMA GEÇİŞ KONTROLÜ ---
-    if (id.endsWith('_basla')) {
-        // ID'den temiz isim çıkar (Örn: acil_olgu_yonetimi_basla -> ACİL OLGU YÖNETİMİ)
-        const algoName = id.replace('_basla', '').replace(/_/g, ' ').toUpperCase();
-        
-        // Görsel toast/banner hazırlığı
-        transitionVisual = `
-            <div class="mb-4 p-3 bg-blue-100 text-blue-800 rounded-2xl text-[10px] font-black uppercase tracking-widest animate-pulse border-b-2 border-blue-200">
-                <i class="fa-solid fa-shuffle mr-2"></i> ${algoName} ALGORİTMASINA GEÇİLİYOR
-            </div>`;
-        
-        // Sesli mesaj hazırlığı
-        transitionVoice = `${algoName} algoritmasına geçiliyor. `;
-    }
+            const body = document.getElementById('algo-body');
+            let txt = s.soru;
 
-    // --- DİNAMİK SAYAÇ YAKALAYICI ---
-    const timerMatch = txt.match(/\(SAYAÇ:(\d+)\)/);
-    if (timerMatch) {
-        const alertVal = parseInt(timerMatch[1]);
-        const label = id.includes('adrenalin') ? "Adrenalin" : "GÜVENLİK BEKLEME";
-        const isRunning = Array.from(document.querySelectorAll('.timer-card')).some(card => card.innerText.includes(label));
-        if (!isRunning) createTimer(label, alertVal);
-    }
+            // Sayaç Kontrolü
+            const timerMatch = txt.match(/\(SAYAÇ:(\d+)\)/);
+            if (timerMatch) {
+                const alertVal = parseInt(timerMatch[1]);
+                const label = id.includes('adrenalin') ? "Adrenalin" : "GÜVENLİ BÖLGEDE BEKLEME SÜRESİ";
+                createTimer(label, alertVal);
+            }
 
-    // --- TEMA VE GÖRSEL AYARLAR ---
-    let theme = { bg: "bg-gray-50", text: "text-gray-800", icon: "" };
-    if(txt.includes("[ONAY]")) theme = { bg: "bg-emerald-50", text: "text-emerald-900", icon: '<i class="fa-solid fa-phone-volume text-emerald-500 text-5xl mb-4"></i>' };
-    else if(txt.includes("[UYARI]")) theme = { bg: "bg-amber-50", text: "text-amber-900", icon: '<i class="fa-solid fa-triangle-exclamation text-amber-500 text-5xl mb-4"></i>' };
-    else if(txt.includes("[KRİTİK]")) theme = { bg: "bg-red-600", text: "text-white", icon: '<i class="fa-solid fa-biohazard text-white text-5xl mb-4"></i>' };
+            // Yetki Rozetleri
+            let badgesHtml = '';
+            if(txt.includes('[ATT]')) badgesHtml += `<span class="badge-att px-3 py-1 rounded-full text-[8px] font-black uppercase">ATT YETKİSİ</span>`;
+            if(txt.includes('[PARAMEDİK]')) badgesHtml += `<span class="badge-pmd px-3 py-1 rounded-full text-[8px] font-black uppercase">PARAMEDİK YETKİSİ</span>`;
+            if(txt.includes('[ONAY]')) badgesHtml += `<span class="badge-kkm px-3 py-1 rounded-full text-[8px] font-black uppercase animate-pulse">KKM ONAYI</span>`;
 
-    const eBtnClass = s.e_metin === "GÜVENLİK SAĞLANDI" ? "bg-emerald-600 shadow-emerald-200" : "bg-red-600 shadow-red-200";
+            let theme = { bg: "bg-gray-50", text: "text-gray-800", icon: "fa-stethoscope" };
+            if(txt.includes("[ONAY]")) theme = { bg: "bg-emerald-50", text: "text-emerald-900", icon: "fa-phone-volume" };
+            else if(txt.includes("[KRİTİK]")) theme = { bg: "bg-red-600", text: "text-white", icon: "fa-biohazard" };
 
-    // --- ARAYÜZ OLUŞTURMA ---
-    body.innerHTML = `
-        ${transitionVisual} 
-        <div class="p-8 ${theme.bg} rounded-[2.5rem] mb-6 shadow-inner border border-black/5">
-            ${theme.icon}
-            <p class="text-2xl font-bold ${theme.text} leading-tight">${txt.replace(/\[.*?\]/g, '').replace(/\(SAYAÇ:\d+\)/g, '')}</p>
-        </div>
-        <div class="grid grid-cols-1 gap-4">
-            ${s.e_metin ? `<button onclick="handleStepClick('${s.e_hedef}', '${id}', '${s.e_metin}')" class="w-full p-6 ${eBtnClass} text-white rounded-3xl font-black btn-action uppercase shadow-xl text-xl">${s.e_metin}</button>` : ''}
-            ${s.h_metin ? `<button onclick="handleStepClick('${s.h_hedef}', '${id}', '${s.h_metin}')" class="w-full p-6 bg-gray-900 text-white rounded-3xl font-black btn-action text-lg">${s.h_metin}</button>` : ''}
-        </div>
-    `;
+            const cleanTxt = getCalculatedText(txt.replace(/\[.*?\]/g, '').replace(/\(SAYAÇ:\d+\)/g, ''));
 
-    // --- SESLENDİRME (GEÇİŞ + SORU BİRLEŞTİRME) ---
-    // Sesin kesilmemesi için ikisini tek bir cümlede birleştiriyoruz
-    const fullVoiceText = transitionVoice + (s.ses || txt.replace(/<[^>]*>?/gm, '').replace(/\(SAYAÇ:\d+\)/g, ''));
-    speak(fullVoiceText);
-}
+            body.innerHTML = `
+                <div class="flex justify-center gap-2 mb-2">${badgesHtml}</div>
+                <div class="p-8 ${theme.bg} rounded-[2.5rem] mb-4 shadow-inner border border-black/5">
+                    <i class="fa-solid ${theme.icon} text-4xl mb-4 opacity-30"></i>
+                    <p class="text-2xl font-bold ${theme.text} leading-tight">${cleanTxt}</p>
+                </div>
+                <div class="grid grid-cols-1 gap-4">
+                    ${s.e_metin ? `<button onclick="handleStepClick('${s.e_hedef}', '${id}', '${s.e_metin}')" class="w-full p-6 ${s.e_metin.includes('ARREST') || theme.bg==='bg-red-600' ? 'bg-red-600' : 'bg-slate-900'} text-white rounded-3xl font-black btn-action uppercase shadow-xl text-lg">${s.e_metin}</button>` : ''}
+                    ${s.h_metin ? `<button onclick="handleStepClick('${s.h_hedef}', '${id}', '${s.h_metin}')" class="w-full p-6 bg-gray-200 text-slate-700 rounded-3xl font-black btn-action text-lg uppercase">${s.h_metin}</button>` : ''}
+                </div>
+            `;
+            speak(txt.replace(/\[.*?\]/g, '').replace(/\(SAYAÇ:\d+\)/g, '').replace(/<[^>]*>?/gm, ''));
+        }
+
         // --- SAYAÇ SİSTEMİ ---
         function createTimer(label, alertSecond) {
-    const tid = `timer-${Date.now()}`;
-    const el = document.createElement('div');
-    el.className = `timer-card bg-slate-800 p-5 rounded-3xl text-white flex justify-between items-center shadow-xl border-l-8 border-blue-500`;
-    el.id = tid;
-    
-    el.innerHTML = `
-        <div>
-            <p class="text-[9px] font-black uppercase opacity-70">${label}</p>
-            <h4 class="text-3xl font-black clock tracking-tighter">00:00</h4>
-        </div>
-        <button onclick="clearInterval(activeTimers['${tid}']); this.parentElement.remove()" class="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl">
-            <i class="fa-solid fa-xmark"></i>
-        </button>`;
-    
-    document.getElementById('timer-stack').prepend(el);
-
-    let t = 0;
-    activeTimers[tid] = setInterval(() => {
-        t++;
-        let m = parseInt(t / 60, 10);
-        let s = parseInt(t % 60, 10);
-        el.querySelector('.clock').innerText = (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
-
-        // --- DİNAMİK UYARI KONTROLÜ ---
-        // Eğer alertSecond bir rakamsa (Örn: 120 veya 300) o saniyede uyarır
-        if (alertSecond > 0 && t === parseInt(alertSecond)) {
-            el.classList.replace('bg-slate-800', 'bg-red-600');
-            el.classList.add('animate-pulse', 'ring-4', 'ring-white');
-            speak(`${label} için belirlenen ${parseInt(alertSecond/60)} dakikalık süre doldu.`);
-        }
-    }, 1000);
-}
-        // --- GİRİŞ VE MODAL YÖNETİMİ ---
-        function askWeight(id) {
-    selectedAlgoId = id;
-
-    // --- AKILLI KONTROL ---
-    // Seçilen algoritmada hiç ilaç dozu ({...}) var mı kontrol et
-    if (!checkIfNeedsWeight(id)) {
-        patientWeight = null; // Kilo gerekmiyor
-        document.getElementById('weight-tag').classList.add('hidden'); // Kilo etiketini gizle
-        askViewMode(); // Direkt görünüm seçme moduna geç
-        return;
-    }
-
-    // Eğer ilaç varsa modalı göster (Mevcut kodun)
-    showModal({
-        title: 'HASTA BİLGİSİ', icon: 'fa-weight-scale', iconBg: 'bg-blue-100', iconColor: 'text-blue-600',
-        content: `
-            <input type="number" id="modalKiloInput" placeholder="Kilo (kg)" class="w-full bg-gray-50 rounded-2xl p-5 text-center text-4xl font-black outline-none border-2 border-blue-100 mb-4">
-            <div class="flex p-1 bg-slate-100 rounded-2xl">
-                <button id="btnAgeU" onclick="ageGroup='under12'; this.classList.add('bg-white','text-red-600'); document.getElementById('btnAgeO').classList.remove('bg-white','text-red-600');" class="flex-1 py-3 rounded-xl font-bold text-[10px] bg-white text-red-600 shadow-sm">&lt; 12 YAŞ</button>
-                <button id="btnAgeO" onclick="ageGroup='over12'; this.classList.add('bg-white','text-red-600'); document.getElementById('btnAgeU').classList.remove('bg-white','text-red-600');" class="flex-1 py-3 rounded-xl font-bold text-[10px] text-slate-500">&ge; 12 YAŞ</button>
-            </div>
-        `,
-        buttons: [
-            { text: 'DEVAM ET', class: 'bg-blue-600 text-white mt-4', action: () => {
-                const val = document.getElementById('modalKiloInput').value;
-                patientWeight = val ? parseFloat(val) : null;
-                if(patientWeight) {
-                    document.getElementById('weight-tag').innerText = patientWeight + " KG";
-                    document.getElementById('weight-tag').classList.remove('hidden');
+            const tid = `timer-${Date.now()}`;
+            const el = document.createElement('div');
+            el.className = `timer-card bg-slate-800 p-5 rounded-3xl text-white flex justify-between items-center shadow-xl border-l-8 border-red-500`;
+            el.id = tid;
+            el.innerHTML = `
+                <div>
+                    <p class="text-[9px] font-black uppercase opacity-70">${label}</p>
+                    <h4 class="text-3xl font-black clock tracking-tighter">00:00</h4>
+                </div>
+                <button onclick="clearInterval(activeTimers['${tid}']); this.parentElement.remove()" class="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>`;
+            document.getElementById('timer-stack').prepend(el);
+            let t = 0;
+            activeTimers[tid] = setInterval(() => {
+                t++;
+                let m = parseInt(t / 60, 10);
+                let s = parseInt(t % 60, 10);
+                el.querySelector('.clock').innerText = (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+                if (alertSecond > 0 && t === parseInt(alertSecond)) {
+                    el.classList.add('animate-pulse', 'ring-4', 'ring-white');
+                    speak(`${label} süresi doldu.`);
                 }
+            }, 1000);
+        }
+
+        // --- AKILLI KİLO KONTROLÜ ---
+        function checkIfNeedsWeight(startId) {
+            let queue = [startId];
+            let visited = new Set();
+            while (queue.length > 0) {
+                let currentId = queue.shift();
+                if (visited.has(currentId) || !db_algos[currentId]) continue;
+                visited.add(currentId);
+                let step = db_algos[currentId];
+                if (step.soru.includes('{')) return true;
+                if (step.e_hedef) queue.push(step.e_hedef);
+                if (step.h_hedef) queue.push(step.h_hedef);
+            }
+            return false;
+        }
+
+        function askWeight(id) {
+            selectedAlgoId = id;
+            if (!checkIfNeedsWeight(id)) {
+                patientWeight = null;
+                document.getElementById('weight-tag').classList.add('hidden');
                 askViewMode();
-            }, keepOpen: true }
-        ]
-    });
-}
+                return;
+            }
+            showModal({
+                title: 'HASTA BİLGİSİ', icon: 'fa-weight-scale', iconBg: 'bg-blue-100', iconColor: 'text-blue-600',
+                content: `
+                    <input type="number" id="modalKiloInput" placeholder="Kilo (kg)" class="w-full bg-gray-50 rounded-2xl p-5 text-center text-4xl font-black outline-none border-2 border-blue-100 mb-4">
+                    <div class="flex p-1 bg-slate-100 rounded-2xl">
+                        <button id="btnAgeU" onclick="ageGroup='under12'; this.classList.add('bg-white','text-red-600'); document.getElementById('btnAgeO').classList.remove('bg-white','text-red-600');" class="flex-1 py-3 rounded-xl font-bold text-[10px] bg-white text-red-600 shadow-sm">&lt; 12 YAŞ</button>
+                        <button id="btnAgeO" onclick="ageGroup='over12'; this.classList.add('bg-white','text-red-600'); document.getElementById('btnAgeU').classList.remove('bg-white','text-red-600');" class="flex-1 py-3 rounded-xl font-bold text-[10px] text-slate-500">&ge; 12 YAŞ</button>
+                    </div>`,
+                buttons: [
+                    { text: 'DEVAM ET', class: 'bg-red-600 text-white mt-4', action: () => {
+                        const val = document.getElementById('modalKiloInput').value;
+                        patientWeight = val ? parseFloat(val) : null;
+                        if(patientWeight) {
+                            document.getElementById('weight-tag').innerText = patientWeight + " KG";
+                            document.getElementById('weight-tag').classList.remove('hidden');
+                        }
+                        askViewMode();
+                    }, keepOpen: true }
+                ]
+            });
+        }
+
         function askViewMode() {
             showModal({
                 title: 'GÖRÜNÜM SEÇİN', icon: 'fa-eye', iconBg: 'bg-red-100', iconColor: 'text-red-600',
@@ -357,27 +362,28 @@
             }
         }
 
-        // --- AI ASİSTAN SİSTEMİ ---
-        function toggleAIChat() { document.getElementById('ai-chat-panel').classList.toggle('open'); }
-        async function sendToAI() {
-            const input = document.getElementById('chatInput');
-            const msg = input.value.trim();
-            if(!msg) return;
-            addMessage(msg, 'user');
-            input.value = '';
-            // RAG Altyapısı: Burada API ile PDF taranır
-            setTimeout(() => addMessage("Gemini API üzerinden PDF taranıyor... (API anahtarı girildiğinde sonuç dönecektir)", 'bot'), 600);
-        }
-        function addMessage(text, side) {
-            const container = document.getElementById('chat-messages');
-            const div = document.createElement('div');
-            div.className = `chat-bubble ${side === 'user' ? 'user-msg' : 'bot-msg'}`;
-            div.innerText = text;
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
+        function handleStepClick(target, current, btnText) {
+            if (btnText === "GÜVENLİK SAĞLANDI") {
+                document.querySelectorAll('.timer-card').forEach(card => {
+                    if (card.innerText.includes("GÜVENLİ BÖLGEDE BEKLEME SÜRESİ")) {
+                        clearInterval(activeTimers[card.id]);
+                        card.remove();
+                    }
+                });
+            }
+            if(target.endsWith('_basla')) {
+                const newProto = getProtocolLabel(target);
+                showModal({
+                    title: 'PROTOKOL GEÇİŞİ', icon: 'fa-shuffle', iconBg: 'bg-blue-100', iconColor: 'text-blue-600',
+                    content: `Şu an <b>${newProto}</b> protokolüne geçiş yapıyorsunuz.`,
+                    buttons: [{ text: 'DEVAM ET', class: 'bg-blue-600 text-white', action: () => showStep(target) }]
+                });
+            } else {
+                showStep(target);
+            }
         }
 
-        // --- DİĞER FONKSİYONLAR ---
+        // --- Altyapı ---
         function showModal(config) {
             const overlay = document.getElementById('global-modal');
             const btns = document.getElementById('modal-buttons');
@@ -395,94 +401,69 @@
             });
             overlay.style.display = 'flex';
         }
-        function handleStepClick(target, current, btnText) {
-    // --- SAYAÇ KAPATMA MANTIĞI ---
-    if (btnText === "GÜVENLİK SAĞLANDI") {
-        const timerCards = document.querySelectorAll('.timer-card');
-        timerCards.forEach(card => {
-            // Kartın içindeki metne bakıyoruz, eğer güvenlik bekleme ise siliyoruz
-            if (card.innerText.includes("GÜVENLİ BÖLGEDE BEKLEME SÜRESİ")) {
-                const tid = card.id;
-                clearInterval(activeTimers[tid]); // Sayacı durdur
-                card.remove(); // Ekrandan kaldır
-            }
-        });
-    }
 
-    // Adrenalin kontrolü (ileri sayım başlatır)
-    if(current.includes('adrenalin')) {
-        createTimer("Adrenalin", null); 
-    }
-    
-    // Bir sonraki adıma geç
-    showStep(target);
-}
-        function goBack() { if(navHistory.length > 1) { navHistory.pop(); showStep(navHistory.pop()); } else { location.reload(); } }
+        async function init() {
+            try {
+                const rI = await fetch(URL_ILAC); const tI = await rI.text();
+                tI.split('\n').slice(1).forEach(l => { 
+                    const c = parseCSV(l); 
+                    if(c[0]) db_drugs.push({ad: c[0], doz: parseFloat(c[1]), birim: c[2]||'mg'}); 
+                });
+                db_drugs.forEach((d, i) => document.getElementById('ilacSelect').innerHTML += `<option value="${i}">${d.ad}</option>`);
+                
+                const rA = await fetch(URL_ALGO); const tA = await rA.text();
+                tA.split('\n').slice(1).forEach(l => {
+                    const c = parseCSV(l);
+                    if(c[0]) db_algos[c[0]] = { soru: c[1], e_metin: c[2], e_hedef: c[3], h_metin: c[4], h_hedef: c[5] };
+                });
+                
+                const list = document.getElementById('algo-list');
+                Object.keys(db_algos).forEach(id => {
+                    if(id.endsWith('_basla')) {
+                        let clean = getProtocolLabel(id);
+                        list.innerHTML += `<button onclick="askWeight('${id}')" class="w-full p-6 bg-white border border-gray-100 rounded-3xl font-bold flex justify-between items-center btn-action shadow-sm mb-2 text-left text-sm"><span>${clean}</span> <i class="fa-solid fa-chevron-right text-red-600 opacity-20"></i></button>`;
+                    }
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        function parseCSV(line) {
+            let arr = []; let quote = false; let col = '';
+            for (let c of line) { if (c === '"') quote = !quote; else if (c === ',' && !quote) { arr.push(col.trim()); col = ''; } else col += c; }
+            arr.push(col.trim()); return arr;
+        }
+
         function tabDegistir(h) {
             document.getElementById('modul-doz').classList.toggle('hidden', h !== 'doz');
             document.getElementById('modul-algo').classList.toggle('hidden', h !== 'algo');
             document.getElementById('nav-doz').classList.toggle('active-tab', h === 'doz');
             document.getElementById('nav-algo').classList.toggle('active-tab', h === 'algo');
         }
+
+        function hesapla() {
+            const k = document.getElementById('kiloInput').value;
+            const i = db_drugs[document.getElementById('ilacSelect').value];
+            if(!k || !i) return;
+            patientWeight = parseFloat(k);
+            document.getElementById('weight-tag').innerText = k + " KG";
+            document.getElementById('weight-tag').classList.remove('hidden');
+            const res = (patientWeight * i.doz).toFixed(2);
+            document.getElementById('sonucDeger').innerText = res + " " + i.birim;
+            document.getElementById('sonucMetin').innerText = i.ad;
+            document.getElementById('sonucPanel').classList.remove('hidden');
+            speak(i.ad + " için " + res + " " + i.birim);
+        }
+
+        function goBack() { if(navHistory.length > 1) { navHistory.pop(); showStep(navHistory.pop()); } else { location.reload(); } }
+        function toggleAIChat() { document.getElementById('ai-chat-panel').classList.toggle('open'); }
+        function speak(t) { window.speechSynthesis.cancel(); const m = new SpeechSynthesisUtterance(t); m.lang = 'tr-TR'; window.speechSynthesis.speak(m); }
+        function askArrest() { askWeight('yetiskin_arrest_basla'); }
         function filterAlgos() {
             const val = document.getElementById('algoSearch').value.toUpperCase();
             const btns = document.getElementById('algo-list').getElementsByTagName('button');
             for(let b of btns) b.style.display = b.innerText.toUpperCase().includes(val) ? "" : "none";
         }
-        function parseCSV(line) {
-            let arr = []; let quote = false; let col = '';
-            for (let c of line) { if (c === '"') quote = !quote; else if (c === ',' && !quote) { arr.push(col.trim()); col = ''; } else col += c; }
-            arr.push(col.trim()); return arr;
-        }
-        async function init() {
-            try {
-                const rI = await fetch(URL_ILAC); const tI = await rI.text();
-                tI.split('\n').slice(1).forEach(l => { const c = parseCSV(l); if(c[0]) db_drugs.push({ad: c[0], doz: parseFloat(c[1]), birim: c[2]||'mg'}); });
-                db_drugs.forEach((d, i) => document.getElementById('ilacSelect').innerHTML += `<option value="${i}">${d.ad}</option>`);
-                const rA = await fetch(URL_ALGO); const tA = await rA.text();
-                tA.split('\n').slice(1).forEach(l => { const c = parseCSV(l); if(c[0]) db_algos[c[0]] = { soru: c[1], e_metin: c[2], e_hedef: c[3], h_metin: c[4], h_hedef: c[5], ses: c[6] }; });
-                const list = document.getElementById('algo-list');
-                Object.keys(db_algos).forEach(id => { if(id.endsWith('_basla')) {
-                    let clean = id.replace('_basla','').replace(/_/g,' ').toUpperCase();
-                    list.innerHTML += `<button onclick="askWeight('${id}')" class="w-full p-6 bg-white border border-gray-100 rounded-3xl font-bold flex justify-between items-center btn-action shadow-sm mb-2 text-left text-sm"><span>${clean}</span> <i class="fa-solid fa-chevron-right text-blue-600 opacity-20"></i></button>`;
-                }});
-            } catch(e) { console.error(e); }
-        }
-
-        function checkIfNeedsWeight(startId) {
-    let queue = [startId];
-    let visited = new Set();
-    
-    while (queue.length > 0) {
-        let currentId = queue.shift();
-        if (visited.has(currentId) || !db_algos[currentId]) continue;
-        
-        visited.add(currentId);
-        let step = db_algos[currentId];
-        
-        // Eğer sorunun içinde süslü parantez varsa, bu algoritma kilo bilgisi gerektiriyor demektir.
-        if (step.soru.includes('{')) return true;
-        
-        // Diğer dalları sıraya ekle
-        if (step.e_hedef) queue.push(step.e_hedef);
-        if (step.h_hedef) queue.push(step.h_hedef);
-    }
-    return false; // Hiçbir adımda ilaç dozu bulunamadı.
-}
-        
-        function hesapla() {
-            const k = document.getElementById('kiloInput').value;
-            const i = db_drugs[document.getElementById('ilacSelect').value];
-            if(!k) return;
-            const res = (k * i.doz).toFixed(2);
-            document.getElementById('sonucDeger').innerText = res + " " + (i.birim || 'mg');
-            document.getElementById('sonucMetin').innerText = i.ad;
-            document.getElementById('sonucPanel').classList.remove('hidden');
-            speak("Sonuç " + res + " " + i.birim);
-        }
-        function speak(t) { window.speechSynthesis.cancel(); const m = new SpeechSynthesisUtterance(t); m.lang = 'tr-TR'; window.speechSynthesis.speak(m); }
         window.onload = init;
-        function askArrest() { initUI('step'); showStep('yetiskin_arrest_basla'); }
     </script>
 </body>
 </html>
